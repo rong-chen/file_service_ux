@@ -173,6 +173,15 @@ const download = async (row)=>{
   a.click();
   tableData.value = await getTable()
 }
+
+const share = (row) => {
+  let result = "http://127.0.0.1:8888"+ row['file_path'].replace(/^\.\/(.*)/, "/$1");
+  navigator.clipboard.writeText(result).then(() => {
+    ElMessage.success("复制成功")
+  }).catch(() => {
+    ElMessage.error("复制失败")
+  });
+}
 </script>
 
 <template>
@@ -226,6 +235,9 @@ const download = async (row)=>{
             合并</el-button>
           <el-button  :disabled="downloadBtnDisabled(scope.row)" @click="download(scope.row)">
             {{scope.row['file_type'] === "video/mp4" ? '播放':'下载'}}
+          </el-button>
+          <el-button @click="share(scope.row)">
+            分享
           </el-button>
         </template>
       </el-table-column>
