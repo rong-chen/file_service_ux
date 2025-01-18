@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 import {LoginApi, UserInfoApi} from "@/api/user.js";
+import {useRouter} from "vue-router";
 
 
 export const useUserStore = defineStore("useUserStore", () => {
@@ -11,8 +12,9 @@ export const useUserStore = defineStore("useUserStore", () => {
         account: "",
         profile_picture: "",
         ID: 0,
-        token:  localStorage.getItem("token")
+        token: localStorage.getItem("token")
     })
+    const router = useRouter();
     const LoginStore = async (account, password) => {
         let res = await LoginApi({
             account, password,

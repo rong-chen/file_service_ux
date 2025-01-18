@@ -1,7 +1,7 @@
 <script setup>
 import {getRouters} from "@/api/menu.js";
 import {useRoute, useRouter} from "vue-router";
-import {onMounted, ref} from "vue";
+import {onMounted} from "vue";
 import HeaderAvatar from "@/components/headerAvatar/index.vue";
 import {useUserStore} from "@/store/user.js";
 import {useRouterStore} from "@/store/router.js";
@@ -40,7 +40,8 @@ const nodeClickFunc =(row)=>{
 
 const userStore = useUserStore()
 onMounted(async()=>{
-  // await loadRoutes();
+    console.log("layout")
+   // await useRouterStore().loadRoutes()
 })
 </script>
 

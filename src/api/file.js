@@ -41,3 +41,13 @@ export const findFile = (data) => {
         }
     )
 }
+export const finishFileApi=(params)=>{
+    return api(
+        {
+            url: '/file/finish',
+            method: 'GET',
+            params
+        }
+    )
+
+}

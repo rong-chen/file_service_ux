@@ -1,7 +1,10 @@
 <script setup>
-import {useRouterStore} from "@/store/router.js";
-const routerStore = useRouterStore()
-
+  import {onMounted} from "vue";
+  onMounted(()=>{
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log(`Error: ${message}, Source: ${source}, Line: ${lineno}`);
+    };
+  })
 </script>
 
 <template>
