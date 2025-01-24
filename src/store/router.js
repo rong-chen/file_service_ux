@@ -1,20 +1,17 @@
 import {defineStore} from "pinia";
-import {onMounted, ref} from "vue";
+import { ref} from "vue";
 import {getRouters} from "@/api/menu.js";
 import {router} from "@/router/index.js";
-import {useRoute} from "vue-router";
-import {useUserStore} from "@/store/user.js";
 
 export const useRouterStore = defineStore("useRouterStore", () => {
     const routerList = ref([])
-    const route = useRoute()
-    const userStore = useUserStore()
     const routerFlag = ref(false)
     const loadRoutes = async () => {
         if(routerList.value.length > 0){
             return
         }
-        const components = import.meta.glob('@/page/**/*.vue');
+        const components = import.meta.glob('@/view/**/*.vue');
+        console.log(components)
         const {code , data} = await getRouters();
         if(code === 0){
             let children = []
@@ -22,7 +19,7 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                 {
                     path: '/layout',
                     name: 'layout',
-                    component: components['/src/page/layout/index.vue'],
+                    component: components['/src/view/layout/index.vue'],
                     meta: {
                         title: '底层layout'
                     },
@@ -30,13 +27,13 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                 }
             ]
 
-
            data?.forEach((item) => {
                 const newRoute = {
                     path: item.path,
                     name: item.name,
-                    component: components[item.component],
+                    component: components["/src/"+item.component],
                     parentId: item['parentId'],
+                    comPath: item['component'],
                     id: item.ID,
                     children:[]
                 };
@@ -49,11 +46,12 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                     name: item.name,
                     id: item.ID
                 }
-                // router.addRoute("layout", newRoute);
                 if (item.children?.length > 0) {
                     item.children.forEach((child) => {
+                        console.log(child.component)
                         row.children.push({
                             label: child.label,
+                            comPath: child['component'],
                             path: child.path,
                             parentId: child['parentId'],
                             name: child.name,
@@ -62,8 +60,9 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                         const newChildRoute = {
                             path: child.path,
                             name: child.name,
+                            comPath: child['component'],
                             parentId: item['parentId'],
-                            component: components[child.component],
+                            component: components["/src/"+child.component],
                             id: item.ID
                         };
                         newRoute.children.push(newChildRoute);
@@ -77,6 +76,7 @@ export const useRouterStore = defineStore("useRouterStore", () => {
             baseRouter.forEach((asyncRouter) => {
                 router.addRoute(asyncRouter)
             })
+            console.log(baseRouter)
             routerFlag.value = true
         }else{
             routerFlag.value = false

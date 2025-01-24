@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
     baseURL: "/api",
-    timeout: 3600000,
+    timeout: 99999,
     headers: {
         "Content-Type": "application/json"
     }
@@ -15,6 +15,7 @@ api.interceptors.request.use(config => {
     if (config.url !== '/user/login') {
         config.headers['q-token'] = localStorage.getItem('token')
     }
+
     return config
 }, err => {
     Promise.reject(err)
