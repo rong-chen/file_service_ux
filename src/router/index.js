@@ -23,6 +23,9 @@ router.beforeEach( async (to, from) => {
     }
     if(userStore.UserInfo.token) {
         if(!routerStore.routerFlag){
+            const userStore = useUserStore()
+            // 获取用户信息
+            await userStore.GetUserInfo();
            await routerStore.loadRoutes()
            return { ...to, replace: true }
         }

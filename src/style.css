@@ -9,3 +9,6 @@ body {
     background: #ededed;
 }
 
+li{
+    list-style: none;
+}

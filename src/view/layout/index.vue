@@ -40,7 +40,6 @@ const nodeClickFunc =(row)=>{
 
 const userStore = useUserStore()
 onMounted(async()=>{
-    console.log("layout")
    // await useRouterStore().loadRoutes()
 })
 </script>
@@ -74,8 +73,8 @@ onMounted(async()=>{
           </el-tree>
         </el-aside>
         <el-main>
-            <el-scrollbar  style="height:calc(100vh - 60px);padding: 15px 15px 0" >
-              <router-view></router-view>
+            <el-scrollbar style="height:calc(100vh - 60px);box-sizing: border-box" >
+              <router-view style="height:calc(100vh - 60px);box-sizing: border-box" ></router-view>
             </el-scrollbar>
         </el-main>
       </el-container>

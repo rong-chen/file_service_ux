@@ -23,6 +23,7 @@ export const useUserStore = defineStore("useUserStore", () => {
         localStorage.setItem("token", res.data.token);
         return res['code']
     }
+
     const GetUserInfo = async () => {
         let res = await UserInfoApi()
         res.data['token'] = UserInfo.value.token

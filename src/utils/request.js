@@ -1,4 +1,5 @@
 import axios from 'axios'
+import {ElMessage} from "element-plus";
 
 const api = axios.create({
     baseURL: "/api",
@@ -15,14 +16,13 @@ api.interceptors.request.use(config => {
     if (config.url !== '/user/login') {
         config.headers['q-token'] = localStorage.getItem('token')
     }
-
     return config
 }, err => {
     Promise.reject(err)
+    ElMessage.error("网络错误")
 })
 
 api.interceptors.response.use(res => {
-
     if (res['data']['code'] === 0) {
         return res.data
     }
@@ -36,6 +36,7 @@ api.interceptors.response.use(res => {
             return
         }
     }
+    ElMessage.error("网络错误")
     return Promise.reject(err)
 })
 

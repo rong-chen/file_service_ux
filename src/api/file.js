@@ -17,17 +17,18 @@ export const finishFileUpload = (params) => {
     return api(
         {
             url: '/file/finish',
-            method:"GET",
+            method: "GET",
             params,
 
         }
     )
 }
-export const findFileList = () => {
+export const findFileList = (params) => {
     return api(
         {
             url: '/file/find-file-list',
             method: 'GET',
+            params
         }
     )
 }
@@ -41,7 +42,17 @@ export const findFile = (data) => {
         }
     )
 }
-export const finishFileApi=(params)=>{
+
+export const collectionFile = (data) => {
+    return api(
+        {
+            url: '/file/collection',
+            method: 'POST',
+            data
+        }
+    )
+}
+export const finishFileApi = (params) => {
     return api(
         {
             url: '/file/finish',

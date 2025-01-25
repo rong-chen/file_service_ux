@@ -1,20 +1,29 @@
 <script setup>
 
-import axios from "axios";
-import {onMounted, ref} from "vue";
+import {computed, onMounted, reactive, ref} from "vue";
 import SparkMD5 from "spark-md5"
 import {ElMessage} from "element-plus";
-import {findFile, findFileList, finishFileApi, finishFileUpload, uploadChunkFile} from "@/api/file.js";
+import {collectionFile, findFile, findFileList, finishFileApi, finishFileUpload, uploadChunkFile} from "@/api/file.js";
 import {ElLoading} from 'element-plus'
 
-const getTable = async () => {
-  const res = await findFileList();
-  return res.data
+const getTable = async (form) => {
+  const res = await findFileList(form);
+  if (res['code'] === 0) {
+    tableData.value = res.data.list;
+    tableTotal.value = res.data.total;
+  }
 }
+
+
 let tableData = ref([])
 onMounted(async () => {
-  tableData.value = await getTable()
+  await getTable(form.value)
 })
+
+// let listData =computed(()=>{
+//   return tableData.value.slice((form.page - 1) * form.pageSize,form.pageSize * form.page)
+// })
+
 
 const getIncompleteChunks = (list, name, md5) => {
   let chunksList = tableData.value?.filter((item) => {
@@ -48,6 +57,7 @@ let loadingInstance1 = null;
 let loadingUploadCounts = ref({})
 
 const uploads = async (e) => {
+  files.value = [];
   loadingInstance1 = ElLoading.service({fullscreen: true})
   const list = [...e.target.files]
   let apiCount = list.length;
@@ -83,7 +93,7 @@ const uploads = async (e) => {
       })
       if (apiCount === 0) {
         loadingInstance1.close();
-        tableData.value = await getTable()
+        await getTable(form.value)
       }
     }
   })
@@ -104,7 +114,7 @@ const req_queue = async (list, count) => {
             fileName: request.get("fileName"),
           });
         }
-        let num = total.value --
+        let num = total.value--
         loadingInstance1.setText(`${num}/${list.length}`);
       }
     }); // 发送所有请求
@@ -115,14 +125,14 @@ const req_queue = async (list, count) => {
     index += count
   }
 }
-let total = ref(0);
+let tableTotal = ref(0);
 
 const upload = async () => {
   loadingInstance1 = ElLoading.service({fullscreen: true})
   let requestList = await splitBlob();
 
   await req_queue(requestList, 10).then(async () => {
-    tableData.value = await getTable()
+    await getTable(form.value)
     loadingInstance1.close();
   })
 }
@@ -180,8 +190,34 @@ const finishFile = async (row) => {
     fileName: row['file_name'],
   })
   if (res['code'] === 0) {
-    tableData.value = await getTable()
+    await getTable(form.value)
     ElMessage.success("操作成功")
+  }
+}
+
+const combined = async () => {
+  let success = 1;
+  const list = tableData.value?.filter((item) => {
+    return !finishBtnDisabled(item);
+  })
+  for (const item of list) {
+    const {code} = await finishFileApi({
+      fileMd5: item['file_md5'],
+      fileName: item['file_name'],
+    })
+    if (code !== 0) {
+      success = 0;
+    }
+  }
+  if(list.length === 0) {
+    ElMessage.warning("暂无满足合并条件")
+    return
+  }
+  await getTable(form.value)
+  if (success === 1) {
+    ElMessage.success("操作成功")
+  } else if (success === 0) {
+    ElMessage.warning("部分任务失败")
   }
 }
 
@@ -217,79 +253,194 @@ const download = async (row) => {
   a.href = result;
   a.target = "_blank";
   a.click();
-  tableData.value = await getTable()
+  await getTable(form.value)
 }
 
 const share = (row) => {
   let result = "http://chenrong.vip:8888" + row['file_path'].replace(/^\.\/(.*)/, "/$1");
-  navigator.clipboard.writeText(result).then(() => {
-    ElMessage.success("复制成功")
-  }).catch(() => {
-    ElMessage.error("复制失败")
-  });
+  // copyText(result);
 }
+
+function copyText(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed"; // 防止页面滚动
+  textarea.style.opacity = "0"; // 隐藏元素
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    const successful = document.execCommand("copy");
+    if (successful) {
+      ElMessage.success("复制成功");
+    } else {
+      ElMessage.error("复制失败");
+    }
+  } catch (err) {
+    ElMessage.error("复制失败");
+  }
+  document.body.removeChild(textarea);
+}
+
+const paginationChange = async (val) => {
+  form.page = val;
+  await getTable(form.value)
+}
+
+
+let fileType = ref([
+  {
+    label: "zip",
+    value: "zip",
+  },
+  {
+    label: "mp3",
+    value: "mp3",
+  }
+])
+let total = ref(0)
+let form = ref({
+  fileType: "",
+  fileName: "",
+  page: 1,
+  pageSize: 10,
+  isSort:""
+})
+const select = async () => {
+  await getTable(form.value)
+}
+const clear = async () => {
+  form.value = {
+    fileType: "",
+    fileName: "",
+    page: 1,
+    pageSize: 10,
+  }
+  await getTable(form.value)
+}
+
+const collection =async (row) => {
+  let data = {
+    id: row['ID'],
+    weight:1
+  }
+  if(row['weight'] === 1){
+    data.weight = 2
+  }else{
+    data.weight = 1
+  }
+  const {code} = await collectionFile(data)
+  if(code === 0){
+    ElMessage.success("变更成功")
+    await getTable(form.value)
+  }
+}
+
 </script>
 
 <template>
   <div class="upload-container">
-    <el-button @click="upload">上传</el-button>
-    <label for="file-input" class="file-label el-button el-button--primary">选择文件</label>
-    <input id="file-input" style="display:none;margin: 0 20px" multiple @change="uploads" type="file">
-    <el-table
-        style="margin-top: 20px"
-        :data="tableData" row-key="ID"
-        border
-    >
-      <el-table-column label="ID" prop="ID" width="100px"></el-table-column>
+    <div class="search" style="background: white;padding: 15px">
+      <el-select
+          v-model="form.isSort"
+          placeholder="权重"
+          style="width: 80px;"
+          @change="select"
+      >
+        <el-option
+            key="打开"
+            label="打开"
+            value="是"
+        />
+        <el-option
+            key="关闭"
+            label="关闭"
+            value="否"
+        />
+      </el-select>
+<!--      <el-select-->
+<!--          v-model="form.fileType"-->
+<!--          placeholder="文件格式"-->
+<!--          style="width: 100px;margin-left: 10px"-->
+<!--          @change="select"-->
+<!--      >-->
+<!--        <el-option-->
+<!--            v-for="item in fileType"-->
+<!--            :key="item.value"-->
+<!--            :label="item.label"-->
+<!--            :value="item.value"-->
+<!--        />-->
+<!--      </el-select>-->
+      <el-input v-model="form.fileName" @input="select" style="width: 200px;margin-left: 10px"
+                placeholder="名称"></el-input>
+      <el-button style="margin-left: 10px" @click="clear">清空</el-button>
+      <el-button style="margin-left: 10px" type="primary" @click="select">搜索</el-button>
+    </div>
+    <div style="background: white;padding: 15px;margin-top: 10px">
+      <label for="file-input" class="file-label el-button el-button--primary"><el-icon><FolderAdd /></el-icon>&nbsp;选择文件({{ files.length }})</label>
+      <el-button @click="upload" :disabled="!files.length"><el-icon><Upload /></el-icon>&nbsp;文件上传</el-button>
+      <input id="file-input" style="display:none;" multiple @change="uploads" type="file">
+      <el-button style="margin-left: 10px"  @click="combined"><el-icon><Connection /></el-icon>&nbsp;一键合并</el-button>
+      <el-table
+          style="margin-top: 20px"
+          :data="tableData" row-key="ID"
+          border
+      >
+        <el-table-column label="ID" prop="ID" width="50px"></el-table-column>
 
-      <!--  <el-table-column label="文件md5" prop="file_md5"></el-table-column>-->
-      <el-table-column label="文件名称" prop="file_name"></el-table-column>
-      <!--      <el-table-column label="片段顺序" prop="chunk_number">-->
-      <!--        <template #default="{row}">-->
-      <!--          {{-->
-      <!--            row['chunk_number'] != null && row['chunk_number'] !== undefined ? row['chunk_number'] : ""-->
-      <!--          }}-->
-      <!--        </template>-->
-      <!--      </el-table-column>-->
-      <el-table-column label="上传状态" prop="file_state" width="100px">
-        <template #default="scope">
-          <el-tag type="danger" v-if="!scope.row.file_state && tableData.indexOf(scope.row) !== -1">
-            文件残缺
-          </el-tag>
-          <el-tag v-else type="success">
-            已上传
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="总片段" prop="file_total" width="100px"></el-table-column>
-      <el-table-column label="已上传片段" prop="chunk_list.length" width="100px"></el-table-column>
-      <el-table-column label="创建时间" prop="CreatedAt">
-        <template #default="{row}">
-          {{
-            formatISODate(row['CreatedAt'])
-          }}
-        </template>
-      </el-table-column>
-      <el-table-column label="更新时间" prop="UpdatedAt">
-        <template #default="{row}">
-          {{ formatISODate(row['UpdatedAt']) }}
-        </template>
-      </el-table-column>
-
-      <el-table-column label="操作">
-        <template #default="scope">
-          <el-button :disabled="finishBtnDisabled(scope.row)" @click="finishFile(scope.row)">
-            合并
-          </el-button>
-          <el-button :disabled="downloadBtnDisabled(scope.row)" @click="download(scope.row)">
-            {{ scope.row['file_type'] === "video/mp4" ? '播放' : '下载' }}
-          </el-button>
-          <el-button @click="share(scope.row)">
-            分享
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        <!--  <el-table-column label="文件md5" prop="file_md5"></el-table-column>-->
+        <el-table-column show-overflow-tooltip label="文件名称" prop="file_name"></el-table-column>
+        <!--      <el-table-column label="片段顺序" prop="chunk_number">-->
+        <!--        <template #default="{row}">-->
+        <!--          {{-->
+        <!--            row['chunk_number'] != null && row['chunk_number'] !== undefined ? row['chunk_number'] : ""-->
+        <!--          }}-->
+        <!--        </template>-->
+        <!--      </el-table-column>-->
+        <el-table-column show-overflow-tooltip label="上传状态" prop="file_state" width="100px">
+          <template #default="scope">
+            <el-tag type="danger" v-if="!scope.row.file_state && tableData.indexOf(scope.row) !== -1">
+              文件残缺
+            </el-tag>
+            <el-tag v-else type="success">
+              已上传
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column show-overflow-tooltip label="总片段" prop="file_total" width="100px"></el-table-column>
+        <el-table-column show-overflow-tooltip label="已上传片段" prop="chunk_list.length"
+                         width="100px"></el-table-column>
+        <el-table-column show-overflow-tooltip label="创建时间" prop="CreatedAt">
+          <template #default="{row}">
+            {{ formatISODate(row['CreatedAt']) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="更新时间" show-overflow-tooltip prop="UpdatedAt">
+          <template #default="{row}">
+            {{ formatISODate(row['UpdatedAt']) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="权重" show-overflow-tooltip >
+          <template #default="{row}">
+            <img @click="collection(row)" v-if="row['weight'] > 1" src="../../../assets/img/collection.png" alt="收藏" style="cursor:pointer;" />
+            <img  @click="collection(row)" v-else src="../../../assets/img/unCollection.png" alt="不收藏" style="cursor:pointer;" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作">
+          <template #default="scope">
+            <el-button :disabled="finishBtnDisabled(scope.row)" @click="finishFile(scope.row)">
+              合并
+            </el-button>
+            <el-button :disabled="downloadBtnDisabled(scope.row)" @click="download(scope.row)">
+              {{ scope.row['file_type'] === "video/mp4" ? '播放' : '下载' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top: 10px;width: 100%;display: flex;justify-content: center">
+        <el-pagination @change="paginationChange" v-model:current-page="form.page" background layout="prev, pager, next"
+                       :total="tableTotal"/>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -297,7 +448,6 @@ const share = (row) => {
 <style scoped>
 .upload-container {
   width: 100%;
-  background-color: white;
   box-sizing: border-box;
   padding: 20px;
 }

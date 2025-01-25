@@ -2,16 +2,18 @@ import {defineStore} from "pinia";
 import { ref} from "vue";
 import {getRouters} from "@/api/menu.js";
 import {router} from "@/router/index.js";
+import {useUserStore} from "@/store/user.js";
 
 export const useRouterStore = defineStore("useRouterStore", () => {
     const routerList = ref([])
     const routerFlag = ref(false)
+
     const loadRoutes = async () => {
         if(routerList.value.length > 0){
             return
         }
+
         const components = import.meta.glob('@/view/**/*.vue');
-        console.log(components)
         const {code , data} = await getRouters();
         if(code === 0){
             let children = []
@@ -48,7 +50,6 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                 }
                 if (item.children?.length > 0) {
                     item.children.forEach((child) => {
-                        console.log(child.component)
                         row.children.push({
                             label: child.label,
                             comPath: child['component'],
@@ -76,7 +77,6 @@ export const useRouterStore = defineStore("useRouterStore", () => {
             baseRouter.forEach((asyncRouter) => {
                 router.addRoute(asyncRouter)
             })
-            console.log(baseRouter)
             routerFlag.value = true
         }else{
             routerFlag.value = false
