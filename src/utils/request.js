@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const api = axios.create({
     baseURL: "/api",
@@ -18,25 +18,37 @@ api.interceptors.request.use(config => {
     }
     return config
 }, err => {
-    Promise.reject(err)
+    console.log(err)
+    // if(res.data.code === 8){}
     ElMessage.error("网络错误")
+    Promise.reject(err)
 })
 
 api.interceptors.response.use(res => {
     if (res['data']['code'] === 0) {
         return res.data
+    }else{
+        ElMessage.error(res['data']['msg'])
     }
     return res.data
 }, err => {
-    let {res} = err
-
-    if (res) {
-    } else {
-        if (!window.navigator.onLine) {
-            return
+    let {response} = err
+    if(response.data.code){
+        if(response.data.code === 8){
+            ElMessageBox.confirm(
+                '请耐心等待管理员审核',
+                '提示',
+                {
+                    cancelButtonText: '关闭',
+                    type: 'warning',
+                    showConfirmButton:false,
+                }
+            ).then(r => {})
+        }else{
+            ElMessage.error("网络错误")
         }
     }
-    ElMessage.error("网络错误")
+
     return Promise.reject(err)
 })
 

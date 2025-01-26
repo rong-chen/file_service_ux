@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import {ref} from "vue";
 import {LoginApi, UserInfoApi} from "@/api/user.js";
 import {useRouter} from "vue-router";
+import {ElMessage} from "element-plus";
 
 
 export const useUserStore = defineStore("useUserStore", () => {
@@ -14,20 +15,25 @@ export const useUserStore = defineStore("useUserStore", () => {
         ID: 0,
         token: localStorage.getItem("token")
     })
-    const router = useRouter();
     const LoginStore = async (account, password) => {
         let res = await LoginApi({
             account, password,
         })
-        UserInfo.value.token = res.data.token;
-        localStorage.setItem("token", res.data.token);
+        if(res['code'] === 0){
+            UserInfo.value.token = res.data.token;
+            localStorage.setItem("token", res.data.token);
+        }else{
+           // ElMessage.error(res['msg'])
+        }
         return res['code']
     }
 
     const GetUserInfo = async () => {
         let res = await UserInfoApi()
-        res.data['token'] = UserInfo.value.token
-        UserInfo.value = res.data
+        if(res['code'] === 0){
+            res.data['token'] = UserInfo.value.token
+            UserInfo.value = res.data
+        }
     }
 
     return {

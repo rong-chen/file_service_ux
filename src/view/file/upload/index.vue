@@ -419,7 +419,7 @@ const collection =async (row) => {
             {{ formatISODate(row['UpdatedAt']) }}
           </template>
         </el-table-column>
-        <el-table-column label="权重" show-overflow-tooltip >
+        <el-table-column label="权重" width="100px" show-overflow-tooltip >
           <template #default="{row}">
             <img @click="collection(row)" v-if="row['weight'] > 1" src="../../../assets/img/collection.png" alt="收藏" style="cursor:pointer;" />
             <img  @click="collection(row)" v-else src="../../../assets/img/unCollection.png" alt="不收藏" style="cursor:pointer;" />

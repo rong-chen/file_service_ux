@@ -12,7 +12,6 @@ export const useRouterStore = defineStore("useRouterStore", () => {
         if(routerList.value.length > 0){
             return
         }
-
         const components = import.meta.glob('@/view/**/*.vue');
         const {code , data} = await getRouters();
         if(code === 0){
@@ -79,7 +78,7 @@ export const useRouterStore = defineStore("useRouterStore", () => {
             })
             routerFlag.value = true
         }else{
-            routerFlag.value = false
+            routerFlag.value = true
         }
     }
     const filterRouterRow = (fullPath) => {

@@ -76,12 +76,12 @@ let form = ref({
 })
 const router = useRouter()
 const dbSaveClick = async () => {
-  if(form.value.account === "" || form.value.account === ""){
+  if(form.value.account === "" && form.value.account === ""){
     ElMessage.error("请填写完整")
     return
   }
   let id = await userStore.LoginStore(form.value.account, form.value.password);
-  if(id ===0){
+  if(id === 0){
     await router.push({
       path: "/layout"
     })
