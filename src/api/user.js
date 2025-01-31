@@ -26,3 +26,21 @@ export const UserInfoApi = () => {
         }
     )
 }
+export const GetAllUserList = () => {
+    return api(
+        {
+            url: '/user/list',
+            method: 'GET'
+        }
+    )
+}
+
+export const ConsentUserRegister = (data) => {
+    return api(
+      {
+          url:"/user/consent",
+          method: 'POST',
+          data
+    }
+    )
+}

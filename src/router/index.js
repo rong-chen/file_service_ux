@@ -26,8 +26,8 @@ router.beforeEach( async (to, from) => {
             const userStore = useUserStore()
             // 获取用户信息
             await userStore.GetUserInfo();
-           await routerStore.loadRoutes()
-           return { ...to, replace: true }
+            await routerStore.loadRoutes()
+            return { ...to, replace: true }
         }
     }else{
         if(to.path !== from.path && whiteList.indexOf(to.path) !== -1){

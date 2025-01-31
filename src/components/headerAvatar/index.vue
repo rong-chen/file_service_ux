@@ -14,6 +14,7 @@
             <div> 昵称：{{ userStore.UserInfo.account_name }}</div>
             <div> 账号：{{ userStore.UserInfo.account }}</div>
             <div> 名称：{{ userStore.UserInfo.user_name ? userStore.UserInfo.user_name : "未知" }}</div>
+            <div style="display: flex;align-items: center"> 操作：<el-button link type="primary" @click="gotoLogin">切换用户</el-button></div>
           </el-form>
         </template>
         <template #reference>
@@ -33,15 +34,24 @@
 <script setup>
 import {useUserStore} from "@/store/user.js";
 import {onMounted} from "vue";
+import {useRouter} from "vue-router";
 
 const userStore = useUserStore()
 onMounted(() => {
 })
+const router = useRouter()
+const  gotoLogin =()=>{
+  router.push({
+    name: "Login",
+  })
+}
 </script>
 <script>
+
 export default {
   name: "HeaderAvatar",
 }
+
 </script>
 <style scoped>
 .header {

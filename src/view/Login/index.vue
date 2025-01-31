@@ -61,12 +61,15 @@ import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {useUserStore} from "@/store/user.js";
 import {RegisterApi} from "@/api/user.js";
+import {useRouterStore} from "@/store/router.js";
 
+const routerStore =useRouterStore()
 onMounted(() => {
   localStorage.removeItem("token")
   document.querySelector('.img__btn').addEventListener('click', function () {
     document.querySelector('.dowebok').classList.toggle('s--signup')
   })
+  routerStore.clearRouter()
 })
 const userStore = useUserStore();
 
@@ -96,7 +99,7 @@ const register = async ()=>{
   const res = await RegisterApi(registerForm.value)
   if(res['code'] === 0){
     let code = await userStore.LoginStore(registerForm.value.account, registerForm.value.password);
-    if(code ===0){
+    if(code ===0 ){
       await router.push({
         path: "/layout"
       })

@@ -9,7 +9,7 @@ export const useRouterStore = defineStore("useRouterStore", () => {
     const routerFlag = ref(false)
 
     const loadRoutes = async () => {
-        if(routerList.value.length > 0){
+        if(routerList.value.length > 0 ){
             return
         }
         const components = import.meta.glob('@/view/**/*.vue');
@@ -88,11 +88,16 @@ export const useRouterStore = defineStore("useRouterStore", () => {
         }
         return "";
     }
+    const clearRouter =()=>{
+        routerFlag.value = false;
+        routerList.value = []
+    }
 
 
     return {
         routerList,
         loadRoutes,
         routerFlag,
+        clearRouter
     }
 })
