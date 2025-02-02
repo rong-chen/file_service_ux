@@ -23,11 +23,30 @@ api.interceptors.request.use(config => {
     ElMessage.error("网络错误")
     Promise.reject(err)
 })
+export const download = (res) => {
+    let fileName = res.headers['content-disposition']
+    const blob = new Blob([res.data])
+    const downloadLink = document.createElement('a')
+
+    fileName = fileName.split("UTF-8''")[1]
+
+    downloadLink.download = decodeURIComponent(fileName)
+    downloadLink.style.display = 'none'
+    downloadLink.href = URL.createObjectURL(blob)
+    document.body.appendChild(downloadLink)
+    downloadLink.click()
+    document.body.removeChild(downloadLink)
+}
 
 api.interceptors.response.use(res => {
+    // console.log( res.headers)
     if (res['data']['code'] === 0) {
         return res.data
     }else{
+        if ( res.headers['content-type'] === 'application/octet-stream') {
+            download(res)
+            return
+        }
         ElMessage.error(res['data']['msg'])
     }
     return res.data

@@ -1,10 +1,17 @@
 <script setup>
 
-import { onMounted,  ref} from "vue";
+import {onMounted, ref} from "vue";
 import SparkMD5 from "spark-md5"
-import {ElMessage} from "element-plus";
-import {collectionFile, findFile, findFileList, finishFileApi, finishFileUpload, uploadChunkFile} from "@/api/file.js";
-import {ElLoading} from 'element-plus'
+import {ElLoading, ElMessage} from "element-plus";
+import {
+  collectionFile,
+  downloadFile,
+  findFile,
+  findFileList,
+  finishFileApi,
+  finishFileUpload,
+  uploadChunkFile
+} from "@/api/file.js";
 import {formatISODate} from "@/utils/time.js";
 
 const getTable = async (form) => {
@@ -237,12 +244,7 @@ const downloadBtnDisabled = (row) => {
   return !row['file_state'];
 }
 const download = async (row) => {
-  let result = "http://chenrong.vip:8888" + row['file_path'].replace(/^\.\/(.*)/, "/$1");
-  const a = document.createElement('a');
-  a.href = result;
-  a.target = "_blank";
-  a.click();
-  await getTable(form.value)
+  await downloadFile(row['ID'])
 }
 
 const share = (row) => {
@@ -366,9 +368,16 @@ const collection =async (row) => {
     </div>
     <div style="background: white;padding: 15px;margin-top: 10px">
       <label for="file-input" class="file-label el-button el-button--primary"><el-icon><FolderAdd /></el-icon>&nbsp;选择文件({{ files.length }})</label>
-      <el-button @click="upload" :disabled="!files.length"><el-icon><Upload /></el-icon>&nbsp;文件上传</el-button>
       <input id="file-input" style="display:none;" multiple @change="uploads" type="file">
+      <el-button  style="margin-left: 10px" @click="upload" :disabled="!files.length"><el-icon><Upload /></el-icon>&nbsp;文件上传</el-button>
       <el-button style="margin-left: 10px"  @click="combined"><el-icon><Connection /></el-icon>&nbsp;一键合并</el-button>
+      <el-popover :width="400" trigger="hover">
+        <template #reference>
+          <el-button icon="MoreFilled"  style="margin-left: 10px">更多操作 </el-button>
+        </template>
+        <el-button icon="CopyDocument">&nbsp;文件备份</el-button>
+        <el-button  style="margin-left: 10px" icon="Refresh">&nbsp;文件恢复</el-button>
+      </el-popover>
       <el-table
           style="margin-top: 20px"
           :data="tableData" row-key="ID"
@@ -420,7 +429,7 @@ const collection =async (row) => {
               合并
             </el-button>
             <el-button :disabled="downloadBtnDisabled(scope.row)" @click="download(scope.row)">
-              {{ scope.row['file_type'] === "video/mp4" ? '播放' : '下载' }}
+              下载
             </el-button>
           </template>
         </el-table-column>

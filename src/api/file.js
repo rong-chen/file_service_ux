@@ -62,3 +62,12 @@ export const finishFileApi = (params) => {
     )
 
 }
+export const downloadFile = (filePath) => {
+    return api(
+        {
+            url: `/file/download/${filePath}`,
+            method: 'GET',
+            responseType:'blob'
+        }
+    )
+}

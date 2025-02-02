@@ -27,9 +27,7 @@
     <el-table-column show-overflow-tooltip label="操作" prop="UpdatedAt">
       <template #default="{row}">
         <el-button  :type = 'row["isExamine"] ? "info":"primary"'  :disabled="userStore.UserInfo.ID === row['ID']" @click="agree(!row['isExamine'],row['ID'])">
-
           {{ row["isExamine"] ? '取消审核':'通过审核'}}
-
         </el-button>
       </template>
     </el-table-column>
