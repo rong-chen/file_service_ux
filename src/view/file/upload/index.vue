@@ -23,8 +23,6 @@ const getTable = async (form) => {
 }
 
 
-
-
 let tableData = ref([])
 onMounted(async () => {
   await getTable(form.value)
@@ -141,7 +139,7 @@ const upload = async () => {
   loadingInstance1 = ElLoading.service({fullscreen: true})
   let requestList = await splitBlob();
 
-  await req_queue(requestList, 10).then(async () => {
+  await req_queue(requestList, 5).then(async () => {
     await getTable(form.value)
     loadingInstance1.close();
   })
@@ -219,7 +217,7 @@ const combined = async () => {
       success = 0;
     }
   }
-  if(list.length === 0) {
+  if (list.length === 0) {
     ElMessage.warning("暂无满足合并条件")
     return
   }
@@ -246,12 +244,12 @@ const downloadBtnDisabled = (row) => {
   return !row['file_state'];
 }
 const download = async (row) => {
-  await downloadFile(row['ID'])
-}
-
-const share = (row) => {
-  let result = "http://chenrong.vip:8888" + row['file_path'].replace(/^\.\/(.*)/, "/$1");
-  // copyText(result);
+  loadingInstance1 = ElLoading.service({fullscreen: true})
+  await downloadFile(row['ID'], ({progress}) => {
+    loadingInstance1.setText(`已下载${Math.floor(progress * 100)}%`);
+  })
+  loadingInstance1.close();
+  loadingInstance1 = null;
 }
 
 function copyText(text) {
@@ -279,24 +277,13 @@ const paginationChange = async (val) => {
   await getTable(form.value)
 }
 
-
-let fileType = ref([
-  {
-    label: "zip",
-    value: "zip",
-  },
-  {
-    label: "mp3",
-    value: "mp3",
-  }
-])
 let total = ref(0)
 let form = ref({
   fileType: "",
   fileName: "",
   page: 1,
   pageSize: 10,
-  isSort:""
+  isSort: ""
 })
 const select = async () => {
   await getTable(form.value)
@@ -311,18 +298,18 @@ const clear = async () => {
   await getTable(form.value)
 }
 
-const collection =async (row) => {
+const collection = async (row) => {
   let data = {
     id: row['ID'],
-    weight:1
+    weight: 1
   }
-  if(row['weight'] === 1){
+  if (row['weight'] === 1) {
     data.weight = 2
-  }else{
+  } else {
     data.weight = 1
   }
   const {code} = await collectionFile(data)
-  if(code === 0){
+  if (code === 0) {
     ElMessage.success("变更成功")
     await getTable(form.value)
   }
@@ -350,35 +337,46 @@ const collection =async (row) => {
             value="否"
         />
       </el-select>
-<!--      <el-select-->
-<!--          v-model="form.fileType"-->
-<!--          placeholder="文件格式"-->
-<!--          style="width: 100px;margin-left: 10px"-->
-<!--          @change="select"-->
-<!--      >-->
-<!--        <el-option-->
-<!--            v-for="item in fileType"-->
-<!--            :key="item.value"-->
-<!--            :label="item.label"-->
-<!--            :value="item.value"-->
-<!--        />-->
-<!--      </el-select>-->
+      <!--      <el-select-->
+      <!--          v-model="form.fileType"-->
+      <!--          placeholder="文件格式"-->
+      <!--          style="width: 100px;margin-left: 10px"-->
+      <!--          @change="select"-->
+      <!--      >-->
+      <!--        <el-option-->
+      <!--            v-for="item in fileType"-->
+      <!--            :key="item.value"-->
+      <!--            :label="item.label"-->
+      <!--            :value="item.value"-->
+      <!--        />-->
+      <!--      </el-select>-->
       <el-input v-model="form.fileName" @input="select" style="width: 200px;margin-left: 10px"
                 placeholder="名称"></el-input>
       <el-button style="margin-left: 10px" @click="clear">清空</el-button>
       <el-button style="margin-left: 10px" type="primary" @click="select">搜索</el-button>
     </div>
     <div style="background: white;padding: 15px;margin-top: 10px">
-      <label for="file-input" class="file-label el-button el-button--primary"><el-icon><FolderAdd /></el-icon>&nbsp;选择文件({{ files.length }})</label>
+      <label for="file-input" class="file-label el-button el-button--primary">
+        <el-icon>
+          <FolderAdd/>
+        </el-icon>&nbsp;选择文件({{ files.length }})</label>
       <input id="file-input" style="display:none;" multiple @change="uploads" type="file">
-      <el-button  style="margin-left: 10px" @click="upload" :disabled="!files.length"><el-icon><Upload /></el-icon>&nbsp;文件上传</el-button>
-      <el-button style="margin-left: 10px"  @click="combined"><el-icon><Connection /></el-icon>&nbsp;一键合并</el-button>
+      <el-button style="margin-left: 10px" @click="upload" :disabled="!files.length">
+        <el-icon>
+          <Upload/>
+        </el-icon>&nbsp;文件上传
+      </el-button>
+      <el-button style="margin-left: 10px" @click="combined">
+        <el-icon>
+          <Connection/>
+        </el-icon>&nbsp;一键合并
+      </el-button>
       <el-popover :width="400" trigger="hover">
         <template #reference>
-          <el-button icon="MoreFilled"  style="margin-left: 10px">更多操作 </el-button>
+          <el-button icon="MoreFilled" style="margin-left: 10px">更多操作</el-button>
         </template>
         <el-button icon="CopyDocument">&nbsp;文件备份</el-button>
-        <el-button  style="margin-left: 10px" icon="Refresh">&nbsp;文件恢复</el-button>
+        <el-button style="margin-left: 10px" icon="Refresh">&nbsp;文件恢复</el-button>
       </el-popover>
       <el-table
           style="margin-top: 20px"
@@ -387,32 +385,32 @@ const collection =async (row) => {
       >
         <el-table-column type="expand">
           <template #default="{row}">
-             <div style="padding: 15px;box-sizing: border-box">
-               <el-card  v-if="row['file_type'].includes('image')" >
-                 <template #header>
-                   <div class="card-header">
-                     <span>文件内容</span>
-                   </div>
-                 </template>
-                 <img :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" alt=""/>
-               </el-card>
-               <el-card v-else-if="row['file_type'].includes('video')">
-                 <template #header>
-                   <div class="card-header">
-                     <span>文件内容</span>
-                   </div>
-                 </template>
-                 <video :src="row['file_path'].replace('./','http://127.0.0.1:8888/')"  controls></video>
-               </el-card>
-               <el-card v-else>
-                 <template #header>
-                   <div class="card-header">
-                     <span>文件内容</span>
-                   </div>
-                 </template>
-                 <img src="@/assets/img/fileStyle/unknown_file.png" alt=""/>
-               </el-card>
-             </div>
+            <div style="padding: 15px;box-sizing: border-box">
+              <el-card v-if="row['file_type'].includes('image')">
+                <template #header>
+                  <div class="card-header">
+                    <span>文件内容</span>
+                  </div>
+                </template>
+                <img :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" alt=""/>
+              </el-card>
+              <el-card v-else-if="row['file_type'].includes('video')">
+                <template #header>
+                  <div class="card-header">
+                    <span>文件内容</span>
+                  </div>
+                </template>
+                <video :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" controls></video>
+              </el-card>
+              <el-card v-else>
+                <template #header>
+                  <div class="card-header">
+                    <span>文件内容</span>
+                  </div>
+                </template>
+                <img src="@/assets/img/fileStyle/unknown_file.png" alt=""/>
+              </el-card>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="ID" prop="ID" width="50px"></el-table-column>
@@ -440,10 +438,12 @@ const collection =async (row) => {
             {{ formatISODate(row['UpdatedAt']) }}
           </template>
         </el-table-column>
-        <el-table-column label="权重" width="100px" show-overflow-tooltip >
+        <el-table-column label="权重" width="100px" show-overflow-tooltip>
           <template #default="{row}">
-            <img @click="collection(row)" v-if="row['weight'] > 1" src="../../../assets/img/collection.png" alt="收藏" style="cursor:pointer;" />
-            <img  @click="collection(row)" v-else src="../../../assets/img/unCollection.png" alt="不收藏" style="cursor:pointer;" />
+            <img @click="collection(row)" v-if="row['weight'] > 1" src="../../../assets/img/collection.png" alt="收藏"
+                 style="cursor:pointer;"/>
+            <img @click="collection(row)" v-else src="../../../assets/img/unCollection.png" alt="不收藏"
+                 style="cursor:pointer;"/>
           </template>
         </el-table-column>
         <el-table-column label="操作">

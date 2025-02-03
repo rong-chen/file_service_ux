@@ -38,6 +38,7 @@ api.interceptors.response.use(res => {
     if (res['data']['code'] === 0) {
         return res.data
     } else {
+
         if (res.data instanceof Blob) {
             if (res.headers['content-type'] === 'application/octet-stream') {
                 download(res)
