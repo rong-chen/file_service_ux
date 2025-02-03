@@ -2,14 +2,12 @@ import axios from 'axios'
 import {ElMessage, ElMessageBox} from "element-plus";
 
 const api = axios.create({
-    baseURL: "/api",
-    timeout: 99999,
-    headers: {
+    baseURL: "/api", timeout: 99999, headers: {
         "Content-Type": "application/json"
     }
 })
 api.interceptors.request.use(config => {
-    if(config['header']){
+    if (config['header']) {
         config.headers = config['header']
     }
 
@@ -27,9 +25,7 @@ export const download = (res) => {
     let fileName = res.headers['content-disposition']
     const blob = new Blob([res.data])
     const downloadLink = document.createElement('a')
-
     fileName = fileName.split("UTF-8''")[1]
-
     downloadLink.download = decodeURIComponent(fileName)
     downloadLink.style.display = 'none'
     downloadLink.href = URL.createObjectURL(blob)
@@ -39,35 +35,37 @@ export const download = (res) => {
 }
 
 api.interceptors.response.use(res => {
-    // console.log( res.headers)
     if (res['data']['code'] === 0) {
         return res.data
-    }else{
-        if ( res.headers['content-type'] === 'application/octet-stream') {
-            download(res)
-            return
+    } else {
+        if (res.data instanceof Blob) {
+            if (res.headers['content-type'] === 'application/octet-stream') {
+                download(res)
+                return
+            } else {
+                res.data.text().then(jsonData  => {
+                    const data = JSON.parse(jsonData)
+                    ElMessage.error(data['msg'])
+                });
+            }
+        } else {
+            ElMessage.error(res['data']['msg'])
         }
-        ElMessage.error(res['data']['msg'])
+
     }
     return res.data
 }, err => {
     let {response} = err
-    if(response.data.code){
-        if(response.data.code === 8){
-            ElMessageBox.confirm(
-                '请耐心等待管理员审核',
-                '提示',
-                {
-                    cancelButtonText: '关闭',
-                    type: 'warning',
-                    showConfirmButton:false,
-                }
-            ).then(r => {})
-        }else{
+    if (response.data.code) {
+        if (response.data.code === 8) {
+            ElMessageBox.confirm('请耐心等待管理员审核', '提示', {
+                cancelButtonText: '关闭', type: 'warning', showConfirmButton: false,
+            }).then(r => {
+            })
+        } else {
             ElMessage.error("网络错误")
         }
     }
-
     return Promise.reject(err)
 })
 

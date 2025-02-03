@@ -11,6 +11,9 @@ const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
+window.addEventListener("unhandledrejection", (event) => {
+    console.error("未处理的 Promise 错误：", event.reason);
+});
 app.use(pinia)
 app.use(ElementPlus)
 app.use(router)

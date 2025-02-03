@@ -10,37 +10,43 @@ const route = useRoute()
 const router = useRouter()
 const routerStore = useRouterStore()
 
-const FindExpandedList =()=>{
-  const path = returnResult(routerStore.routerList,route.name)
+const FindExpandedList = () => {
+  const path = returnResult(routerStore.routerList, route.name)
+  console.log(path)
   let list = []
-  if(path){
+  if (path) {
     list.push(path)
   }
   return list;
 }
 
-const returnResult=(list,val)=>{
+const returnResult = (list, val) => {
   for (let i = 0; i < list?.length; i++) {
-    if(list[i].children?.length > 0) {
-      return returnResult(list[i]?.children, val)
+    if (list[i].children?.length > 0) {
+      const res = returnResult(list[i]?.children, val)
+      if (res) {
+        return res
+      } else {
+        continue
+      }
     }
-    if(list[i].name === val){
-      return list[i]?.path
+    if (list[i].name === val) {
+      return list[i]?.name
     }
   }
 }
 
-const nodeClickFunc =(row)=>{
-  if(!row.children?.length){
+const nodeClickFunc = (row) => {
+  if (!row.children?.length) {
     router.push({
-      name:row.name
+      name: row.name
     })
   }
 }
 
 const userStore = useUserStore()
-onMounted(async()=>{
-   // await useRouterStore().loadRoutes()
+onMounted(async () => {
+  console.log(routerStore.routerList)
 })
 </script>
 
@@ -49,13 +55,14 @@ onMounted(async()=>{
     <el-container>
       <el-header>
         <template #default>
-          <div style="background-color: #8fa1c7;height: 100%;width: 100%;padding-right: 20px;display: flex;align-items: center;justify-content: right">
-            <HeaderAvatar v-if="userStore.UserInfo.ID" />
+          <div
+              style="background-color: #8fa1c7;height: 100%;width: 100%;padding-right: 20px;display: flex;align-items: center;justify-content: right">
+            <HeaderAvatar v-if="userStore.UserInfo.ID"/>
           </div>
         </template>
       </el-header>
       <el-container>
-        <el-aside width="200px"  style="height:calc(100vh - 60px);background-color:#ffffff;">
+        <el-aside width="200px" style="height:calc(100vh - 60px);background-color:#ffffff;">
           <el-tree
               style="max-width: 600px"
               :data="routerStore.routerList"
@@ -73,9 +80,9 @@ onMounted(async()=>{
           </el-tree>
         </el-aside>
         <el-main>
-            <el-scrollbar style="height:calc(100vh - 60px);box-sizing: border-box" >
-              <router-view style="height:calc(100vh - 60px);box-sizing: border-box" ></router-view>
-            </el-scrollbar>
+          <el-scrollbar style="height:calc(100vh - 60px);box-sizing: border-box">
+            <router-view style="height:calc(100vh - 60px);box-sizing: border-box"></router-view>
+          </el-scrollbar>
         </el-main>
       </el-container>
     </el-container>
@@ -87,6 +94,7 @@ export default {
   name: 'Layout',
 }
 </script>
+
 <style>
 .layout-container .el-header {
   padding: 0 !important;
@@ -96,10 +104,12 @@ export default {
   width: 100%;
   height: 40px !important;
 }
-.layout-container .custom-tree-node{
+
+.layout-container .custom-tree-node {
   width: 100%;
 }
-.layout-container .el-main{
+
+.layout-container .el-main {
   box-sizing: border-box !important;
   padding: 0 !important;
 }

@@ -1,6 +1,6 @@
 <script setup>
 
-import {onMounted, ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import SparkMD5 from "spark-md5"
 import {ElLoading, ElMessage} from "element-plus";
 import {
@@ -21,6 +21,8 @@ const getTable = async (form) => {
     tableTotal.value = res.data.total;
   }
 }
+
+
 
 
 let tableData = ref([])
@@ -383,17 +385,38 @@ const collection =async (row) => {
           :data="tableData" row-key="ID"
           border
       >
+        <el-table-column type="expand">
+          <template #default="{row}">
+             <div style="padding: 15px;box-sizing: border-box">
+               <el-card  v-if="row['file_type'].includes('image')" >
+                 <template #header>
+                   <div class="card-header">
+                     <span>文件内容</span>
+                   </div>
+                 </template>
+                 <img :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" alt=""/>
+               </el-card>
+               <el-card v-else-if="row['file_type'].includes('video')">
+                 <template #header>
+                   <div class="card-header">
+                     <span>文件内容</span>
+                   </div>
+                 </template>
+                 <video :src="row['file_path'].replace('./','http://127.0.0.1:8888/')"  controls></video>
+               </el-card>
+               <el-card v-else>
+                 <template #header>
+                   <div class="card-header">
+                     <span>文件内容</span>
+                   </div>
+                 </template>
+                 <img src="@/assets/img/fileStyle/unknown_file.png" alt=""/>
+               </el-card>
+             </div>
+          </template>
+        </el-table-column>
         <el-table-column label="ID" prop="ID" width="50px"></el-table-column>
-
-        <!--  <el-table-column label="文件md5" prop="file_md5"></el-table-column>-->
         <el-table-column show-overflow-tooltip label="文件名称" prop="file_name"></el-table-column>
-        <!--      <el-table-column label="片段顺序" prop="chunk_number">-->
-        <!--        <template #default="{row}">-->
-        <!--          {{-->
-        <!--            row['chunk_number'] != null && row['chunk_number'] !== undefined ? row['chunk_number'] : ""-->
-        <!--          }}-->
-        <!--        </template>-->
-        <!--      </el-table-column>-->
         <el-table-column show-overflow-tooltip label="上传状态" prop="file_state" width="100px">
           <template #default="scope">
             <el-tag type="danger" v-if="!scope.row.file_state && tableData.indexOf(scope.row) !== -1">

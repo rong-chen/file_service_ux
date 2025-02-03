@@ -2,10 +2,11 @@ import {createRouter, createWebHashHistory, createWebHistory, useRoute} from 'vu
 import {useRouterStore} from "@/store/router.js";
 import {useUserStore} from "@/store/user.js";
 import {getRouters} from "@/api/menu.js";
+
 const routes = [
-    { path: '/' ,redirect: '/login'  },
-    { path: '/login', name:"Login", component: ()=>import('../view/Login/index.vue') },
-   // { path: '/layout',name:"Layout", component:  ()=>import('../view/Layout/index.vue') },
+    {path: '/', redirect: '/login'},
+    {path: '/login', name: "Login", component: () => import('../view/Login/index.vue')},
+    // { path: '/layout',name:"Layout", component:  ()=>import('../view/Layout/index.vue') },
 ]
 
 export const router = createRouter({
@@ -15,23 +16,23 @@ export const router = createRouter({
 
 const whiteList = ['Login']
 
-router.beforeEach( async (to, from) => {
+router.beforeEach(async (to, from) => {
     const routerStore = useRouterStore()
     const userStore = useUserStore()
-    if(whiteList.indexOf(to.name) !== -1 ){
+    if (whiteList.indexOf(to.name) !== -1) {
         return true
     }
-    if(userStore.UserInfo.token) {
-        if(!routerStore.routerFlag){
+    if (userStore.UserInfo.token) {
+        if (!routerStore.routerFlag) {
             const userStore = useUserStore()
             // 获取用户信息
             await userStore.GetUserInfo();
             await routerStore.loadRoutes()
-            return { ...to, replace: true }
+            return {...to, replace: true}
         }
-    }else{
-        if(to.path !== from.path && whiteList.indexOf(to.path) !== -1){
-            return { name : "Login" }
+    } else {
+        if (to.path !== from.path && whiteList.indexOf(to.path) !== -1) {
+            return {name: "Login"}
         }
     }
 })
