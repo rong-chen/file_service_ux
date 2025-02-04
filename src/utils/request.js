@@ -16,7 +16,6 @@ api.interceptors.request.use(config => {
     }
     return config
 }, err => {
-    console.log(err)
     // if(res.data.code === 8){}
     ElMessage.error("网络错误")
     Promise.reject(err)

@@ -64,47 +64,75 @@ let files = ref([])
 let loadingInstance1 = null;
 let loadingUploadCounts = ref({})
 
+const getFileMd5 = (file, defaultSize = DEFAULT_SLICK_SIZE) => {
+  return new Promise((resolve, reject) => {
+    let blobSlice = File.prototype.slice
+    // 总片段
+    let chunks = Math.ceil(file.size / defaultSize)
+    let fileReader = new FileReader()
+    let speakMd5 = new SparkMD5()
+    let currentChunksNum = 0
+    const time = new Date().getTime();
+    fileReader.onload = (e) => {
+      speakMd5.append(e.target.result)
+      if (currentChunksNum < chunks) {
+        currentChunksNum++;
+        loadNextFileChunk();
+      } else {
+        const fileMd5 = speakMd5.end();
+        resolve({
+          fileMd5,
+          timestamp: (new Date().getTime() - time) / 1000,
+        })
+      }
+    }
+
+    function loadNextFileChunk() {
+      let start = currentChunksNum * defaultSize;
+      let end = start + defaultSize;
+      end > file.size && (end = file.size);
+      fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
+    }
+
+    loadNextFileChunk();
+  })
+}
+const DEFAULT_SLICK_SIZE = 1024 * 1024;
+
 const uploads = async (e) => {
   files.value = [];
   loadingInstance1 = ElLoading.service({fullscreen: true})
   const list = [...e.target.files]
   let apiCount = list.length;
-  list.forEach((item) => {
-    const val = item
+  for (const item of list) {
+    const val = item;
+    const { fileMd5 } = await getFileMd5(val);
     const chunks = sliceFile(val);
-    const fileR = new FileReader() // 创建一个reader用来读取文件流
-    fileR.readAsArrayBuffer(val);
     loadingUploadCounts.value = [];
-    fileR.onload = async (e) => {
-      const blob = e.target.result
-      const spark = new SparkMD5.ArrayBuffer()
-      spark.append(blob)
-      const fileMd5 = spark.end()
-      await findFile({
-        "file_total": chunks.length,
-        "file_name": val.name,
-        "file_type": item.type,
-        "file_md5": fileMd5,
-        "path": ""
-      }).then(res => {
-        const list = getIncompleteChunks(chunks, val.name, fileMd5)
-        files.value.push({
-          blob: list,
-          type: item.type,
-          name: val.name,
-          md5: fileMd5,
-          wait_num: list.length,
-          file_total: chunks.length,
-        })
-        loadingUploadCounts.value[fileMd5] = list.length;
-        apiCount--;
+    await findFile({
+      "file_total": chunks.length,
+      "file_name": val.name,
+      "file_type": item.type || "unknown",
+      "file_md5": fileMd5,
+      "path": ""
+    }).then(res => {
+      const list = getIncompleteChunks(chunks, val.name, fileMd5)
+      files.value.push({
+        blob: list,
+        type: item.type,
+        name: val.name,
+        md5: fileMd5,
+        wait_num: list.length,
+        file_total: chunks.length,
       })
-      if (apiCount === 0) {
-        loadingInstance1.close();
-        await getTable(form.value)
-      }
+      loadingUploadCounts.value[fileMd5] = list.length;
+      apiCount--;
+    })
+    if (apiCount === 0) {
+      loadingInstance1.close();
+      await getTable(form.value)
     }
-  })
+  }
 }
 
 const req_queue = async (list, count) => {
@@ -179,7 +207,7 @@ const splitBlob = async () => {
 };
 
 
-function sliceFile(file, chunkSize = 1024 * 1024) { // 默认 1MB
+function sliceFile(file, chunkSize = DEFAULT_SLICK_SIZE) { // 默认 1MB
   const chunks = [];
   let start = 0;
   while (start < file.size) {

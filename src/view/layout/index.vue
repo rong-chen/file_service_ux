@@ -12,7 +12,6 @@ const routerStore = useRouterStore()
 
 const FindExpandedList = () => {
   const path = returnResult(routerStore.routerList, route.name)
-  console.log(path)
   let list = []
   if (path) {
     list.push(path)
@@ -46,7 +45,7 @@ const nodeClickFunc = (row) => {
 
 const userStore = useUserStore()
 onMounted(async () => {
-  console.log(routerStore.routerList)
+  // console.log(routerStore.routerList)
 })
 </script>
 

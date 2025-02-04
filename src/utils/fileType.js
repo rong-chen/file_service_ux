@@ -25,7 +25,6 @@ export const getFileEle =(className,file_type)=>{
     };
     if(typeof iconMapping[file_type] !=='string'){
         const el = document.querySelector(`.${className}`);
-        console.log(el)
         // el.appendChild(iconMapping[file_type]);
     }
     return iconMapping[file_type];
