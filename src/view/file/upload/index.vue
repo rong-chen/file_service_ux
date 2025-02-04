@@ -14,6 +14,8 @@ import {
 } from "@/api/file.js";
 import {formatISODate} from "@/utils/time.js";
 
+const maxWorkers = navigator.hardwareConcurrency || 4
+
 const getTable = async (form) => {
   const res = await findFileList(form);
   if (res['code'] === 0) {
@@ -22,6 +24,28 @@ const getTable = async (form) => {
   }
 }
 
+// 等待优化成多线程切割文件
+const cutFile = (file) => {
+  const chunkSize = Math.ceil(file.size / maxWorkers)
+  for (let i = 0; i < maxWorkers; i++) {
+    // 每个线程开始的位置
+    let start = i * chunkSize;
+    let end = (i * chunkSize) + chunkSize;
+    end > file.size && (end = file.size);
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      type: 'module',
+    });
+    worker.postMessage({
+      start,
+      end,
+      file,
+      DEFAULT_SLICK_SIZE
+    })
+    worker.onmessage = function (e) {
+      console.log('Worker response:', e.data);  // 计算后的数据
+    };
+  }
+}
 
 let tableData = ref([])
 onMounted(async () => {
@@ -101,12 +125,12 @@ const DEFAULT_SLICK_SIZE = 1024 * 1024;
 
 const uploads = async (e) => {
   files.value = [];
-  loadingInstance1 = ElLoading.service({fullscreen: true})
+  //loadingInstance1 = ElLoading.service({fullscreen: true})
   const list = [...e.target.files]
   let apiCount = list.length;
   for (const item of list) {
     const val = item;
-    const { fileMd5 } = await getFileMd5(val);
+    const {fileMd5} = await getFileMd5(val);
     const chunks = sliceFile(val);
     loadingUploadCounts.value = [];
     await findFile({
@@ -136,37 +160,38 @@ const uploads = async (e) => {
 }
 
 const req_queue = async (list, count) => {
-  let index = 0;
-  total.value = list.length;
-  const sendApi = async () => {
-    const req_list = list.slice(index, count + index);
-    const promises = req_list.map(async (request) => {
-      const res = await uploadChunkFile(request);
-      if (res['code'] === 0) {
-        loadingUploadCounts.value[request.get("fileMd5")]--;
-        if (loadingUploadCounts.value[request.get("fileMd5")] === 0) {
-          await finishFileUpload({
-            fileMd5: request.get("fileMd5"),
-            fileName: request.get("fileName"),
-          });
+  return new Promise(async (resolve, reject) => {
+    let index = 0;
+    total.value = list.length;
+    const sendApi = async () => {
+      const req_list = list.slice(index, count + index);
+      const promises = req_list.map(async (request) => {
+        const res = await uploadChunkFile(request)
+        if (res['code'] === 0) {
+          loadingUploadCounts.value[request.get("fileMd5")]--;
+          if (loadingUploadCounts.value[request.get("fileMd5")] === 0) {
+            await finishFileUpload({
+              fileMd5: request.get("fileMd5"),
+              fileName: request.get("fileName"),
+            });
+          }
+          let num = total.value--
+          loadingInstance1.setText(`${num}/${list.length}`);
         }
-        let num = total.value--
-        loadingInstance1.setText(`${num}/${list.length}`);
-      }
-    }); // 发送所有请求
-    await Promise.all(promises);
-  }
-  while (index < list.length) {
-    await sendApi();
-    index += count
-  }
+      }); // 发送所有请求
+      await Promise.allSettled(promises);
+    }
+    while (index < list.length) {
+      await sendApi();
+      index += count
+    }
+  })
 }
 let tableTotal = ref(0);
 
 const upload = async () => {
   loadingInstance1 = ElLoading.service({fullscreen: true})
   let requestList = await splitBlob();
-
   await req_queue(requestList, 5).then(async () => {
     await getTable(form.value)
     loadingInstance1.close();
@@ -279,6 +304,11 @@ const download = async (row) => {
   loadingInstance1.close();
   loadingInstance1 = null;
 }
+
+const del = (row) => {
+//
+}
+
 
 function copyText(text) {
   const textarea = document.createElement("textarea");
@@ -399,6 +429,8 @@ const collection = async (row) => {
           <Connection/>
         </el-icon>&nbsp;一键合并
       </el-button>
+
+
       <el-popover :width="400" trigger="hover">
         <template #reference>
           <el-button icon="MoreFilled" style="margin-left: 10px">更多操作</el-button>
@@ -420,7 +452,7 @@ const collection = async (row) => {
                     <span>文件内容</span>
                   </div>
                 </template>
-                <img :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" alt=""/>
+                <img :src="row['file_path'].replace('./',`/api/`)" alt=""/>
               </el-card>
               <el-card v-else-if="row['file_type'].includes('video')">
                 <template #header>
@@ -428,7 +460,7 @@ const collection = async (row) => {
                     <span>文件内容</span>
                   </div>
                 </template>
-                <video :src="row['file_path'].replace('./','http://127.0.0.1:8888/')" controls></video>
+                <video :src="row['file_path'].replace('./','/api/')" controls></video>
               </el-card>
               <el-card v-else>
                 <template #header>
@@ -474,13 +506,17 @@ const collection = async (row) => {
                  style="cursor:pointer;"/>
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="300">
           <template #default="scope">
-            <el-button :disabled="finishBtnDisabled(scope.row)" @click="finishFile(scope.row)">
+            <el-button icon="Connection" :disabled="finishBtnDisabled(scope.row)" @click="finishFile(scope.row)">
               合并
             </el-button>
-            <el-button :disabled="downloadBtnDisabled(scope.row)" @click="download(scope.row)">
+            <el-button type="primary" icon="download" :disabled="downloadBtnDisabled(scope.row)"
+                       @click="download(scope.row)">
               下载
+            </el-button>
+            <el-button type="danger" icon="delete" @click="del(scope.row)">
+              删除
             </el-button>
           </template>
         </el-table-column>
