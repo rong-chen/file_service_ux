@@ -1,12 +1,11 @@
 <script setup>
-import { markRaw } from 'vue'
-import { Delete } from '@element-plus/icons-vue'
+import {markRaw} from 'vue'
+import {Delete} from '@element-plus/icons-vue'
 import {nextTick, onMounted, ref} from "vue";
 import SparkMD5 from "spark-md5"
-import {ElLoading, ElMessage,ElMessageBox} from "element-plus";
+import {ElLoading, ElMessage, ElMessageBox} from "element-plus";
 import {
-  collectionFile, deleteFile,
-  downloadFile,
+  collectionFile, deleteFile, downloadFileKey,
   findFile,
   findFileList,
   finishFileApi,
@@ -197,8 +196,10 @@ const upload = async () => {
   await req_queue(requestList, 5).then(async () => {
     await getTable(form.value)
     loadingInstance1.close();
+    files.value = []
   })
 }
+
 
 const splitBlob = async () => {
   let requestList = [];
@@ -298,13 +299,25 @@ const finishBtnDisabled = (row) => {
 const downloadBtnDisabled = (row) => {
   return !row['file_state'];
 }
+
 const download = async (row) => {
-  loadingInstance1 = ElLoading.service({fullscreen: true})
-  await downloadFile(row['ID'], ({progress}) => {
-    loadingInstance1.setText(`已下载${Math.floor(progress * 100)}%`);
-  })
-  loadingInstance1.close();
-  loadingInstance1 = null;
+  // await downloadFileKey(row.ID)
+  const ele = document.createElement('a');
+  ele.download = row['file_name'];
+  ele.href = row['file_path'].replace('./','/api/');
+  document.body.appendChild(ele);
+  ele.click()
+  document.body.removeChild(ele);
+
+  //
+  //
+  //
+  // loadingInstance1 = ElLoading.service({fullscreen: true})
+  // await downloadFile(row['ID'], ({progress}) => {
+  //   loadingInstance1.setText(`已下载${Math.floor(progress * 100)}%`);
+  // })
+  // loadingInstance1.close();
+  // loadingInstance1 = null;
 }
 
 const del = ({ID}) => {
@@ -314,12 +327,12 @@ const del = ({ID}) => {
       {
         type: 'warning',
         icon: markRaw(Delete),
-        confirmButtonText:"删除",
-        cancelButtonText:"取消"
+        confirmButtonText: "删除",
+        cancelButtonText: "取消"
       }
   ).then(async () => {
     const {code} = await deleteFile(ID)
-    if(code === 0){
+    if (code === 0) {
       ElMessage.success("删除成功")
       await getTable(form.value)
     }

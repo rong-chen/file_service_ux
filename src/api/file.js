@@ -74,6 +74,15 @@ export const downloadFile = (filePath,callback) => {
         }
     )
 }
+
+export const downloadFileKey = (fileId) => {
+    return api(
+        {
+            url: `/file/download-key/${fileId}`,
+            method: 'GET',
+        }
+    )
+}
 export  const deleteFile = (id) => {
     return api(
         {
