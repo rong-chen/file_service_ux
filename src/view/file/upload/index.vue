@@ -1,10 +1,11 @@
 <script setup>
-
+import { markRaw } from 'vue'
+import { Delete } from '@element-plus/icons-vue'
 import {nextTick, onMounted, ref} from "vue";
 import SparkMD5 from "spark-md5"
-import {ElLoading, ElMessage} from "element-plus";
+import {ElLoading, ElMessage,ElMessageBox} from "element-plus";
 import {
-  collectionFile,
+  collectionFile, deleteFile,
   downloadFile,
   findFile,
   findFileList,
@@ -125,7 +126,7 @@ const DEFAULT_SLICK_SIZE = 1024 * 1024;
 
 const uploads = async (e) => {
   files.value = [];
-  //loadingInstance1 = ElLoading.service({fullscreen: true})
+  loadingInstance1 = ElLoading.service({fullscreen: true})
   const list = [...e.target.files]
   let apiCount = list.length;
   for (const item of list) {
@@ -185,6 +186,7 @@ const req_queue = async (list, count) => {
       await sendApi();
       index += count
     }
+    resolve()
   })
 }
 let tableTotal = ref(0);
@@ -305,8 +307,25 @@ const download = async (row) => {
   loadingInstance1 = null;
 }
 
-const del = (row) => {
-//
+const del = ({ID}) => {
+  ElMessageBox.confirm(
+      '你确定要删除它吗？物理删除不可逆！',
+      '提示',
+      {
+        type: 'warning',
+        icon: markRaw(Delete),
+        confirmButtonText:"删除",
+        cancelButtonText:"取消"
+      }
+  ).then(async () => {
+    const {code} = await deleteFile(ID)
+    if(code === 0){
+      ElMessage.success("删除成功")
+      await getTable(form.value)
+    }
+  }).catch((e) => {
+    console.log(e);
+  })
 }
 
 

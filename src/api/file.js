@@ -74,3 +74,11 @@ export const downloadFile = (filePath,callback) => {
         }
     )
 }
+export  const deleteFile = (id) => {
+    return api(
+        {
+            url: `/file/delete?id=${id}`,
+            method: 'DELETE',
+        }
+    )
+}
