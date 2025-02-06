@@ -91,3 +91,12 @@ export  const deleteFile = (id) => {
         }
     )
 }
+export  const shareFile = (data) => {
+    return api(
+        {
+            url: `/file/share`,
+            method: 'POST',
+            data
+        }
+    )
+}

@@ -1,5 +1,5 @@
 <script setup>
-import {markRaw} from 'vue'
+import {markRaw, reactive} from 'vue'
 import {Delete} from '@element-plus/icons-vue'
 import {nextTick, onMounted, ref} from "vue";
 import SparkMD5 from "spark-md5"
@@ -9,10 +9,12 @@ import {
   findFile,
   findFileList,
   finishFileApi,
-  finishFileUpload,
+  finishFileUpload, shareFile,
   uploadChunkFile
 } from "@/api/file.js";
 import {formatISODate} from "@/utils/time.js";
+import {useUserStore} from "@/store/user.js";
+import {GetAllUserList} from "@/api/user.js";
 
 const maxWorkers = navigator.hardwareConcurrency || 4
 
@@ -289,6 +291,9 @@ const finishBtnDisabled = (row) => {
   if (!row['chunk_list']?.length) {
     return true;
   }
+  if (row['is_share']) {
+    return true
+  }
   if (row['chunk_list']?.length !== row['file_total']) {
     return true;
   }
@@ -304,7 +309,7 @@ const download = async (row) => {
   // await downloadFileKey(row.ID)
   const ele = document.createElement('a');
   ele.download = row['file_name'];
-  ele.href = row['file_path'].replace('./','/api/');
+  ele.href = row['file_path'].replace('./', '/api/');
   document.body.appendChild(ele);
   ele.click()
   document.body.removeChild(ele);
@@ -404,7 +409,62 @@ const collection = async (row) => {
     await getTable(form.value)
   }
 }
+const userTableData = ref([])
 
+let shareFormData = reactive({
+  from_user: "",
+  to_user: "",
+  file_id: ""
+})
+
+const share = async (row) => {
+  shareFormData["file_id"] = row.ID;
+  dialogTableVisible.value = true
+  const {code, data} = await GetAllUserList()
+  if (code === 0) {
+    userTableData.value = data.list.filter((item) => {
+      return item.ID !== useUserStore().UserInfo.ID
+    })
+  }
+}
+
+const handleCurrentChange = (row) => {
+  shareFormData["from_user"] = useUserStore().UserInfo.ID
+  shareFormData["to_user"] = row.ID
+}
+
+const close = () => {
+  dialogTableVisible.value = false
+  shareFormData = {
+    from_user: "",
+    to_user: "",
+    file_id: ""
+  }
+}
+
+const submit = async () => {
+  if (shareFormData["from_user"] && shareFormData["to_user"] && shareFormData["file_id"]) {
+    dialogTableVisible.value = false
+    const {code} = await shareFile(shareFormData);
+    if (code === 0) {
+      ElMessage.success("操作成功")
+    }
+  } else {
+    ElMessage.error("请选择用户")
+  }
+
+}
+
+const shareBtnDisabled =(row)=>{
+  if(row['is_share']) {
+    return true
+  }
+  if(!row['file_state']) {
+    return true
+  }
+}
+
+let dialogTableVisible = ref(false)
 </script>
 
 <template>
@@ -520,16 +580,18 @@ const collection = async (row) => {
         <el-table-column show-overflow-tooltip label="总片段" prop="file_total" width="100px"></el-table-column>
         <el-table-column show-overflow-tooltip label="已上传片段" prop="chunk_list.length"
                          width="100px"></el-table-column>
-        <el-table-column show-overflow-tooltip label="创建时间" prop="CreatedAt">
+        <el-table-column show-overflow-tooltip label="分享人" width="150px">
           <template #default="{row}">
-            {{ formatISODate(row['CreatedAt']) }}
+            {{
+              row['is_share'] ? row['share_account_name'] : ""
+            }}
           </template>
         </el-table-column>
-        <el-table-column label="更新时间" show-overflow-tooltip prop="UpdatedAt">
-          <template #default="{row}">
-            {{ formatISODate(row['UpdatedAt']) }}
-          </template>
-        </el-table-column>
+                <el-table-column label="上传时间" show-overflow-tooltip prop="UpdatedAt">
+                  <template #default="{row}">
+                    {{ formatISODate(row['UpdatedAt']) }}
+                  </template>
+                </el-table-column>
         <el-table-column label="权重" width="100px" show-overflow-tooltip>
           <template #default="{row}">
             <img @click="collection(row)" v-if="row['weight'] > 1" src="../../../assets/img/collection.png" alt="收藏"
@@ -538,7 +600,7 @@ const collection = async (row) => {
                  style="cursor:pointer;"/>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="300">
+        <el-table-column label="操作" width="400">
           <template #default="scope">
             <el-button icon="Connection" :disabled="finishBtnDisabled(scope.row)" @click="finishFile(scope.row)">
               合并
@@ -546,6 +608,10 @@ const collection = async (row) => {
             <el-button type="primary" icon="download" :disabled="downloadBtnDisabled(scope.row)"
                        @click="download(scope.row)">
               下载
+            </el-button>
+            <el-button type="info" :disabled="shareBtnDisabled(scope.row)" v-if="useUserStore().UserInfo['authority_id'] === 888" icon="share"
+                       @click="share(scope.row)">
+              分享
             </el-button>
             <el-button type="danger" icon="delete" @click="del(scope.row)">
               删除
@@ -558,6 +624,18 @@ const collection = async (row) => {
                        :total="tableTotal"/>
       </div>
     </div>
+
+    <el-dialog destroy-on-close v-model="dialogTableVisible" @close="close" title="用户列表" width="800">
+      <el-table :data="userTableData" highlight-current-row @current-change="handleCurrentChange">
+        <el-table-column property="account" label="帐号" width="150"/>
+        <el-table-column property="account_name" label="帐号昵称" width="200"/>
+        <el-table-column property="user_name" label="用户名称"/>
+      </el-table>
+      <div style="display: flex;justify-content: right">
+        <el-button style="margin-top: 20px" type="info" @click="dialogTableVisible = false">取消</el-button>
+        <el-button style="margin-top: 20px" type="primary" @click="submit">提交</el-button>
+      </div>
+    </el-dialog>
   </div>
 
 </template>
