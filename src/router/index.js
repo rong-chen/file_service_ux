@@ -19,6 +19,11 @@ const whiteList = ['Login']
 router.beforeEach(async (to, from) => {
     const routerStore = useRouterStore()
     const userStore = useUserStore()
+    if(to.fullPath === '/layout') {
+        to.fullPath = "/layout/home"
+        to.path = "/layout/home"
+        return {...to, replace: true}
+    }
     if (whiteList.indexOf(to.name) !== -1) {
         return true
     }

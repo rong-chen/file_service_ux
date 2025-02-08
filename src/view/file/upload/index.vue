@@ -15,6 +15,7 @@ import {
 import {formatISODate} from "@/utils/time.js";
 import {useUserStore} from "@/store/user.js";
 import {GetAllUserList} from "@/api/user.js";
+import {useFileStore} from "@/store/file.js";
 
 const maxWorkers = navigator.hardwareConcurrency || 4
 
@@ -125,6 +126,12 @@ const getFileMd5 = (file, defaultSize = DEFAULT_SLICK_SIZE) => {
 }
 const DEFAULT_SLICK_SIZE = 1024 * 1024;
 
+const uploads2 =async (e)=>{
+  const fileStore = useFileStore()
+  await fileStore.upload(e.target.files[0])
+}
+
+
 const uploads = async (e) => {
   files.value = [];
   loadingInstance1 = ElLoading.service({fullscreen: true})
@@ -140,6 +147,7 @@ const uploads = async (e) => {
       "file_name": val.name,
       "file_type": item.type || "unknown",
       "file_md5": fileMd5,
+      "file_size": item.size,
       "path": ""
     }).then(res => {
       const list = getIncompleteChunks(chunks, val.name, fileMd5)
@@ -201,6 +209,8 @@ const upload = async () => {
     files.value = []
   })
 }
+
+
 
 
 const splitBlob = async () => {
@@ -468,8 +478,8 @@ let dialogTableVisible = ref(false)
 </script>
 
 <template>
-  <div class="upload-container">
-    <div class="search" style="background: white;padding: 15px">
+  <div class="upload-container"  v-if="false">
+    <div class="search" style="background: white;padding: 15px" >
       <el-select
           v-model="form.isSort"
           placeholder="权重"
@@ -522,13 +532,18 @@ let dialogTableVisible = ref(false)
         </el-icon>&nbsp;一键合并
       </el-button>
 
-
-      <el-popover :width="400" trigger="hover">
+      <label for="file-input2" class="file-label el-button el-button--primary">
+        <el-icon>
+          <FolderAdd/>
+        </el-icon>&nbsp;选择文件2</label>
+      <input id="file-input2" style="display:none;" multiple @change="uploads2" type="file">
+      <el-popover :width="400" trigger="hover"  >
         <template #reference>
           <el-button icon="MoreFilled" style="margin-left: 10px">更多操作</el-button>
         </template>
         <el-button icon="CopyDocument">&nbsp;文件备份</el-button>
         <el-button style="margin-left: 10px" icon="Refresh">&nbsp;文件恢复</el-button>
+        <el-button style="margin-left: 10px" icon="Refresh" @click="useFileStore().selectFile()">&nbsp;测试</el-button>
       </el-popover>
       <el-table
           style="margin-top: 20px"

@@ -12,3 +12,32 @@ body {
 li{
     list-style: none;
 }
+
+input{
+    border: none;
+    background-color: transparent;
+}
+/* 去除选中时的边框 */
+input:focus {
+    outline: none; /* 去除默认的焦点边框 */
+    border: none;  /* 如果需要，去除现有的边框 */
+}
+.search{
+    display: flex;
+    background: #ededed;
+    height: 30px;
+    align-items: center;
+    border-radius: 10px;
+}
+button{
+    border: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.ellipsis {
+    white-space: nowrap;       /* 禁止换行 */
+    overflow: hidden;          /* 隐藏超出部分 */
+    text-overflow: ellipsis;   /* 溢出时显示省略号 */
+}

@@ -38,6 +38,8 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                     parentId: item['parentId'],
                     comPath: item['component'],
                     id: item.ID,
+                    icon: item.icon,
+
                     children: []
                 };
                 // 声明页面路由菜单
@@ -47,7 +49,8 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                     path: item.path,
                     parentId: item['parentId'],
                     name: item.name,
-                    id: item.ID
+                    id: item.ID,
+                    icon: item.icon,
                 }
                 if (item.children?.length > 0) {
                     item.children.forEach((child) => {
@@ -57,7 +60,8 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                             path: child.path,
                             parentId: child['parentId'],
                             name: child.name,
-                            id: item.ID
+                            id: item.ID,
+                            icon: item.icon,
                         })
                         const newChildRoute = {
                             path: child.path,
@@ -65,7 +69,8 @@ export const useRouterStore = defineStore("useRouterStore", () => {
                             comPath: child['component'],
                             parentId: item['parentId'],
                             component: components["/src/" + child.component],
-                            id: item.ID
+                            id: item.ID,
+                            icon: item.icon,
                         };
                         newRoute.children.push(newChildRoute);
                     });
