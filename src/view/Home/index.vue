@@ -10,7 +10,9 @@
         </div>
         <ul class="nav">
           <li v-for="item in useFileStore().tableData">
-            <div v-if="item['file_state']"
+            <div v-if="item['file_state']"  :class="{
+            'isActive':changeRow['ID'] === item['ID']
+          }"
                  style="display: flex;justify-content: space-between;align-items: center;height: 50px"
                  @click="changeRow = item">
               <div style="display: flex;width: 350px;align-items: center">
@@ -163,12 +165,10 @@ const del = ({ID}) => {
 }
 
 .file-size {
-  color: #858585;
   font-size: 14px;
 }
 
 .file-time {
-  color: #858585;
   font-size: 14px;
 }
 
@@ -180,14 +180,19 @@ const del = ({ID}) => {
   cursor: pointer;
   padding: 0 10px;
   border-radius: 5px;
+  overflow: hidden;
 }
 
-.nav li:hover div {
+.nav li:hover>div {
   background: #ededed;
 }
 
 .fileInfo {
   padding: 20px;
+}
+.isActive{
+  background: #cacaca !important;
+  border-radius: 5px;
 }
 </style>
 <style>
