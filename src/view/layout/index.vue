@@ -4,6 +4,8 @@ import HeaderAvatar from "@/components/headerAvatar/index.vue";
 import {useUserStore} from "@/store/user.js";
 import {useRouterStore} from "@/store/router.js";
 import {formatBytes} from "../../utils/formatSize.js";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {ref} from "vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -33,12 +35,30 @@ const returnResult = (list, val) => {
     }
   }
 }
-
+let lastTreeItem = ref("home")
+let elTrees = ref()
 const nodeClickFunc = (row) => {
   if (!row.children?.length) {
-    router.push({
-      name: row.name
-    })
+    if (row['name'] === "private_file") {
+      elTrees.value.setCurrentKey(lastTreeItem.value);
+      ElMessageBox.prompt('请输入密码', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(({value}) => {
+        if (value === "admin") {
+          router.push({
+            name: row.name
+          })
+        } else {
+          ElMessage.error("私密密码错误!")
+        }
+      })
+    } else {
+      lastTreeItem.value = row['name']
+      router.push({
+        name: row.name
+      })
+    }
   }
 }
 
@@ -58,7 +78,8 @@ const userStore = useUserStore()
         </template>
       </el-header>
       <el-container>
-        <el-aside width="250px" style="height:calc(100vh - 60px);background-color:#ffffff;border-right: 1px solid #ededed">
+        <el-aside width="250px"
+                  style="height:calc(100vh - 60px);background-color:#ffffff;border-right: 1px solid #ededed">
           <div class="menu-container">
             <img style="width: 50px;height: 50px" src="@/assets/img/fox.png" alt="">
             <div style="flex: 1;margin-left: 10px">
@@ -66,16 +87,19 @@ const userStore = useUserStore()
                 名称
               </div>
               <div>
-                <el-progress :show-text="false" :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100" />
+                <el-progress :show-text="false"
+                             :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100"/>
               </div>
               <div class="userInfo">
-                {{formatBytes(useUserStore().UserInfo['use_disk_size'])}}/ {{formatBytes(useUserStore().UserInfo['disk_size'])}}
+                {{ formatBytes(useUserStore().UserInfo['use_disk_size']) }}/
+                {{ formatBytes(useUserStore().UserInfo['disk_size']) }}
               </div>
             </div>
           </div>
           <el-tree
               style="max-width: 600px"
               :data="routerStore.routerList"
+              ref="elTrees"
               node-key="name"
               :current-node-key="route['name']"
               highlight-current
@@ -84,7 +108,6 @@ const userStore = useUserStore()
               class="node-tree"
           >
             <template #default="{ data }">
-
               <div class="custom-tree-node">
                 <span class="iconfont " :class='"icon-"+data["icon"]'></span>
                 <span style="margin-left: 10px">{{ data.label }}</span>
@@ -140,15 +163,17 @@ export default {
 .node-tree {
   padding: 15px;
 }
-.menu-container{
-  padding: 15px ;
+
+.menu-container {
+  padding: 15px;
   box-sizing: border-box;
   height: 70px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #ededed;
 }
-.userInfo{
+
+.userInfo {
   font-size: 12px;
   margin: 3px 0;
   color: #3a3a3a;

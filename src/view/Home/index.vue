@@ -99,7 +99,7 @@ let changeRow = ref({
 const download = async ({ID}) => {
   // 生成下载秘钥
   const res = await downloadFileKey(ID)
-  if(res['code'] === 0){
+  if (res['code'] === 0) {
     await ElMessageBox.alert(`请复制好秘钥，前往下载器下载文件！<br /><a  href="javascript:void(0);">${res.data.key}</a>`, '标题', {
       dangerouslyUseHTMLString: true,
       confirmButtonText: '确定'
