@@ -85,6 +85,7 @@ const dbSaveClick = async () => {
   }
   let id = await userStore.LoginStore(form.value.account, form.value.password);
   if(id === 0){
+    console.log(userStore.UserInfo)
     await router.push({
       path: "/layout"
     })

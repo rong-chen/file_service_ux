@@ -26,29 +26,29 @@ const getTable = async (form) => {
     tableTotal.value = res.data.total;
   }
 }
-
-// 等待优化成多线程切割文件
-const cutFile = (file) => {
-  const chunkSize = Math.ceil(file.size / maxWorkers)
-  for (let i = 0; i < maxWorkers; i++) {
-    // 每个线程开始的位置
-    let start = i * chunkSize;
-    let end = (i * chunkSize) + chunkSize;
-    end > file.size && (end = file.size);
-    const worker = new Worker(new URL('./worker.js', import.meta.url), {
-      type: 'module',
-    });
-    worker.postMessage({
-      start,
-      end,
-      file,
-      DEFAULT_SLICK_SIZE
-    })
-    worker.onmessage = function (e) {
-      console.log('Worker response:', e.data);  // 计算后的数据
-    };
-  }
-}
+//
+// // 等待优化成多线程切割文件
+// const cutFile = (file) => {
+//   const chunkSize = Math.ceil(file.size / maxWorkers)
+//   for (let i = 0; i < maxWorkers; i++) {
+//     // 每个线程开始的位置
+//     let start = i * chunkSize;
+//     let end = (i * chunkSize) + chunkSize;
+//     end > file.size && (end = file.size);
+//     const worker = new Worker(new URL('./worker.js', import.meta.url), {
+//       type: 'module',
+//     });
+//     worker.postMessage({
+//       start,
+//       end,
+//       file,
+//       DEFAULT_SLICK_SIZE
+//     })
+//     worker.onmessage = function (e) {
+//       console.log('Worker response:', e.data);  // 计算后的数据
+//     };
+//   }
+// }
 
 let tableData = ref([])
 onMounted(async () => {

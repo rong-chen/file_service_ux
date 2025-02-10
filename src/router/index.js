@@ -14,17 +14,14 @@ export const router = createRouter({
     routes,
 })
 
-const whiteList = ['login']
+const whiteList = ['Login']
 
 router.beforeEach(async (to, from) => {
     const routerStore = useRouterStore()
     const userStore = useUserStore()
-    if(to.fullPath === '/layout') {
-        to.fullPath = "/layout/home"
-        to.path = "/layout/home"
-        return {...to, replace: true}
-    }
+
     if (whiteList.indexOf(to.name) !== -1) {
+        userStore.exitApp()
         return true
     }
     if (userStore.UserInfo.token) {
@@ -33,13 +30,25 @@ router.beforeEach(async (to, from) => {
             // 获取用户信息
             await userStore.GetUserInfo();
             await routerStore.loadRoutes()
+            if(to.fullPath === '/layout') {
+                to.fullPath = "/layout/my_files"
+                to.path = "/layout/my_files"
+                to.name="my_files"
+            }
             return {...to, replace: true}
         }
     } else {
+        if(to.fullPath === '/layout') {
+            to.fullPath = "/layout/my_files"
+            to.path = "/layout/my_files"
+            to.name="my_files"
+            return {...to, replace: true}
+        }
         if (to.path !== from.path && whiteList.indexOf(to.path) !== -1) {
             return {name: "Login"}
         }
     }
+
 })
 
 

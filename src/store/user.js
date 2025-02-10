@@ -3,6 +3,7 @@ import {ref} from "vue";
 import {LoginApi, UserInfoApi} from "@/api/user.js";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
+import {useRouterStore} from "@/store/router.js";
 
 
 export const useUserStore = defineStore("useUserStore", () => {
@@ -23,8 +24,6 @@ export const useUserStore = defineStore("useUserStore", () => {
         if(res['code'] === 0){
             UserInfo.value.token = res.data.token;
             localStorage.setItem("token", res.data.token);
-        }else{
-           // ElMessage.error(res['msg'])
         }
         return res['code']
     }
@@ -36,10 +35,24 @@ export const useUserStore = defineStore("useUserStore", () => {
             UserInfo.value = res.data
         }
     }
-
+    const exitApp = () => {
+        localStorage.removeItem("token")
+        UserInfo.value = {
+            username: "",
+            uuid: "",
+            account_name: "",
+            account: "",
+            profile_picture: "",
+            ID: 0,
+            authority_id:88,
+            token:""
+        }
+        useRouterStore().routerFlag = false
+    }
     return {
         LoginStore,
         GetUserInfo,
         UserInfo: UserInfo,
+        exitApp
     }
 })

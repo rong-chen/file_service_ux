@@ -4,8 +4,7 @@ import HeaderAvatar from "@/components/headerAvatar/index.vue";
 import {useUserStore} from "@/store/user.js";
 import {useRouterStore} from "@/store/router.js";
 import {formatBytes} from "../../utils/formatSize.js";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {onMounted, ref} from "vue";
+import { ref} from "vue";
 
 const route = useRoute()
 const router = useRouter()
