@@ -390,6 +390,7 @@ let form = ref({
   pageSize: 10,
   isSort: ""
 })
+
 const select = async () => {
   await getTable(form.value)
 }

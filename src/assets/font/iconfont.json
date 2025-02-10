@@ -6,6 +6,34 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "42041977",
+      "name": "已订阅",
+      "font_class": "yidingyue",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "10446123",
+      "name": "空心五角星",
+      "font_class": "kongxinwujiaoxing",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
+      "icon_id": "10446124",
+      "name": "实心五角星",
+      "font_class": "shixinwujiaoxing",
+      "unicode": "e626",
+      "unicode_decimal": 58918
+    },
+    {
+      "icon_id": "27159549",
+      "name": "上下箭头",
+      "font_class": "shangxiajiantou",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
       "icon_id": "8262061",
       "name": "文件移送",
       "font_class": "wenjianyisong",

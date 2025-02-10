@@ -1,5 +1,5 @@
 <template>
-  <div class="header">
+  <div class="header headerAvatar-container">
     <div style="display: flex;font-family: 'Open Sans', Helvetica, Arial, sans-serif;align-items: center">
       <div style="width: 250px;display: flex;align-items: center;padding-left: 20px;">
         <img src="@/assets/icon.png" alt="">
@@ -11,7 +11,25 @@
             <Search/>
           </el-icon>
         </div>
-        <input placeholder="搜索文件名称" class="input">
+        <el-select
+            filterable
+            v-model="fileName"
+            placeholder="搜索文件名称"
+            style="width: 240px;font-weight: normal"
+            class="selectInput"
+            remote
+            :remote-method="inputHandler"
+            @change="inputChangeHandler"
+            clearable
+        >
+          <el-option
+              v-for="item in file_list"
+              :key="item.ID"
+              :label="item.Name"
+              :value="item.Name"
+              @click="goHome(item.ID)"
+          />
+        </el-select>
       </div>
     </div>
     <div
@@ -25,7 +43,7 @@
       </button>
       <el-popover popper-class="popoverClass" placement="bottom" :width="600" trigger="click">
         <template #reference>
-          <el-button style="margin-left: 20px"  icon="Sort" circle></el-button>
+          <el-button style="margin-left: 20px" icon="Sort" circle></el-button>
         </template>
         <div class="popover-content">
           <div class="left">
@@ -87,7 +105,38 @@ onMounted(() => {
 const router = useRouter()
 const gotoLogin = () => {
   router.push({
-    name: "Login",
+    name: "login",
+  })
+}
+const fileStore = useFileStore()
+const fileName = ref("")
+
+let file_list = ref([])
+const inputHandler = async (e) => {
+  fileStore.form.fileName = e
+  file_list.value=[]
+  await fileStore.getTable()
+  await fileStore.tableData.forEach(row => {
+    file_list.value.push({
+      ID: row.ID,
+      Name: row.file_name,
+    })
+  })
+}
+const inputChangeHandler = async ()=>{
+  file_list.value=[]
+  fileStore.form.fileName = fileName.value
+  await fileStore.getTable()
+  await fileStore.tableData.forEach(row => {
+    file_list.value.push({
+      ID: row.ID,
+      Name: row.file_name,
+    })
+  })
+}
+const goHome =(id)=>{
+  router.push({
+    name: "home",
   })
 }
 
@@ -175,9 +224,23 @@ export default {
   color: #3477fa;
 }
 
+.selectInput {
+  background: transparent;
+}
 </style>
 <style>
 .popoverClass {
   padding: 0 !important;
+}
+
+.headerAvatar-container .el-select__wrapper {
+  background: transparent;
+  box-shadow: none;
+  padding: 0 !important;
+}
+
+.headerAvatar-container .el-select__wrapper:hover {
+  border: none;
+  box-shadow: none;
 }
 </style>

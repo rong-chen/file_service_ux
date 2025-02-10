@@ -9,12 +9,20 @@ export const useFileStore = defineStore('useFileStore', () => {
     let tableData = ref([])
     const DEFAULT_SLICK_SIZE = 1024 * 1024;
     let ChunkList = ref([])
-    const getTable = async (form) => {
-        const res = await findFileList(form);
+    let form = ref({
+        isSort:"否",
+        fileName: "",
+    })
+    const getTable = async () => {
+        const res = await findFileList(form.value);
         if (res['code'] === 0) {
+            tableData.value = [];
+            currentUploadFile.value=[];
             if (res.data.list && res.data.list.length > 0) {
-                tableData.value = res.data.list;
                 for (const item of res.data.list) {
+                    if (item['file_state']) {
+                        tableData.value.push(item)
+                    }
                     if (!item['file_state'] && (item['chunk_list'].length !== item['file_total'])) {
                         let baseInfo = ref({
                             name: item.file_name,
@@ -33,6 +41,7 @@ export const useFileStore = defineStore('useFileStore', () => {
                         await finishFileUpload({
                             fileMd5: item['file_md5'], fileName: item.file_name,
                         });
+                        await getTable();
                     }
                 }
             }
@@ -243,10 +252,19 @@ export const useFileStore = defineStore('useFileStore', () => {
         }
         await Promise.all(promises);
         return requestList; // 返回填充完成的requestList
-    };
+    }
+
+    const filterRowById = (id) => {
+        if (tableData.value && tableData.value.length > 0) {
+            return tableData.value.filter((item) => {
+                return item['ID'] === id;
+            })
+        }
+        return [];
+    }
 
 
     return {
-        selectFile, currentUploadFile,tableData, getTable
+        selectFile, currentUploadFile, tableData, getTable,filterRowById,form
     }
 })

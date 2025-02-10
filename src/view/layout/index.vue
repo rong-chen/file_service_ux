@@ -5,7 +5,7 @@ import {useUserStore} from "@/store/user.js";
 import {useRouterStore} from "@/store/router.js";
 import {formatBytes} from "../../utils/formatSize.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -39,28 +39,13 @@ let lastTreeItem = ref("home")
 let elTrees = ref()
 const nodeClickFunc = (row) => {
   if (!row.children?.length) {
-    if (row['name'] === "private_file") {
-      elTrees.value.setCurrentKey(lastTreeItem.value);
-      ElMessageBox.prompt('请输入密码', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-      }).then(({value}) => {
-        if (value === "admin") {
-          router.push({
-            name: row.name
-          })
-        } else {
-          ElMessage.error("私密密码错误!")
-        }
-      })
-    } else {
-      lastTreeItem.value = row['name']
-      router.push({
-        name: row.name
-      })
-    }
+    lastTreeItem.value = row['name']
+    router.push({
+      name: row.name
+    })
   }
 }
+
 
 const userStore = useUserStore()
 

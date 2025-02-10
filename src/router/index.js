@@ -5,7 +5,7 @@ import {getRouters} from "@/api/menu.js";
 
 const routes = [
     {path: '/', redirect: '/login'},
-    {path: '/login', name: "Login", component: () => import('../view/Login/index.vue')},
+    {path: '/login', name: "Login", component: () => import('../view/login/index.vue')},
     // { path: '/layout',name:"Layout", component:  ()=>import('../view/Layout/index.vue') },
 ]
 
@@ -14,7 +14,7 @@ export const router = createRouter({
     routes,
 })
 
-const whiteList = ['Login']
+const whiteList = ['login']
 
 router.beforeEach(async (to, from) => {
     const routerStore = useRouterStore()

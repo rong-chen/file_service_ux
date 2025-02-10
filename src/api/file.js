@@ -62,15 +62,12 @@ export const finishFileApi = (params) => {
     )
 
 }
-export const downloadFile = (filePath,callback) => {
+export const downloadFile = (key,start,end) => {
     return api(
         {
-            url: `/file/download/${filePath}`,
+            url: `/file/download/${key}`,
             method: 'GET',
-            responseType:'blob',
-            onDownloadProgress:function (progress) {
-                callback.call(this,progress)
-            }
+            headers: { 'Range': `bytes=${start}-${end}` },
         }
     )
 }
