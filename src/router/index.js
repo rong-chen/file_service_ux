@@ -31,13 +31,13 @@ router.beforeEach(async (to, from) => {
             await routerStore.loadRoutes()
             return {...to, replace: true}
         }
-    } else {
-        if(to.path === '/layout') {
+        if(to.name === 'layout') {
             to.fullPath = "/layout/my_files"
             to.path = "/layout/my_files"
             to.name="my_files"
             return {...to, replace: true}
         }
+    } else {
         if (to.path !== from.path && whiteList.indexOf(to.path) !== -1) {
             return {name: "Login"}
         }

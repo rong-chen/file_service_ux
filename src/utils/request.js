@@ -16,7 +16,7 @@ api.interceptors.request.use(config => {
     }
     return config
 }, err => {
-    // if(res.data.code === 8){}
+    console.log("网络错误")
     ElMessage.error("网络错误")
     Promise.reject(err)
 })
@@ -37,7 +37,6 @@ api.interceptors.response.use(res => {
     if (res['data']['code'] === 0) {
         return res.data
     } else {
-
         if (res.data instanceof Blob) {
             if (res.headers['content-type'] === 'application/octet-stream') {
                 download(res)
@@ -60,12 +59,14 @@ api.interceptors.response.use(res => {
         if (response.data.code === 8) {
             ElMessageBox.confirm('请耐心等待管理员审核', '提示', {
                 cancelButtonText: '关闭', type: 'warning', showConfirmButton: false,
-            }).then(r => {
             })
+            return
         } else {
             ElMessage.error("网络错误")
+            return
         }
     }
+    ElMessage.error("网络错误")
     return Promise.reject(err)
 })
 
