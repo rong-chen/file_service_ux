@@ -43,9 +43,11 @@ export const useUserStore = defineStore("useUserStore", () => {
             account_name: "",
             account: "",
             profile_picture: "",
+            fileTotalSize: 0,
             ID: 0,
             authority_id:88,
-            token:""
+            token:"",
+            overSize:0
         }
         useRouterStore().routerFlag = false
     }

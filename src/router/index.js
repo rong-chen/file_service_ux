@@ -6,7 +6,6 @@ import {getRouters} from "@/api/menu.js";
 const routes = [
     {path: '/', redirect: '/login'},
     {path: '/login', name: "Login", component: () => import('../view/login/index.vue')},
-    // { path: '/layout',name:"Layout", component:  ()=>import('../view/Layout/index.vue') },
 ]
 
 export const router = createRouter({
@@ -30,15 +29,10 @@ router.beforeEach(async (to, from) => {
             // 获取用户信息
             await userStore.GetUserInfo();
             await routerStore.loadRoutes()
-            if(to.fullPath === '/layout') {
-                to.fullPath = "/layout/my_files"
-                to.path = "/layout/my_files"
-                to.name="my_files"
-            }
             return {...to, replace: true}
         }
     } else {
-        if(to.fullPath === '/layout') {
+        if(to.path === '/layout') {
             to.fullPath = "/layout/my_files"
             to.path = "/layout/my_files"
             to.name="my_files"

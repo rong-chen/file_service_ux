@@ -2,13 +2,11 @@ import {defineStore} from "pinia";
 import {ref} from "vue";
 import {getRouters} from "@/api/menu.js";
 import {router} from "@/router/index.js";
-import {useUserStore} from "@/store/user.js";
-import {useRoute} from "vue-router";
+
 
 export const useRouterStore = defineStore("useRouterStore", () => {
     const routerList = ref([])
     const routerFlag = ref(false)
-    const route = useRoute()
 
     const loadRoutes = async () => {
         if (routerList.value.length > 0) {
