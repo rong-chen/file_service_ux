@@ -68,11 +68,10 @@ const userStore = useUserStore()
             <img style="width: 50px;height: 50px" src="@/assets/img/fox.png" alt="">
             <div style="flex: 1;margin-left: 10px">
               <div class="userInfo">
-                名称
+                {{userStore.UserInfo.account_name}}
               </div>
               <div>
-                <el-progress :show-text="false"
-                             :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100"/>
+                <el-progress :show-text="false"  :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100"/>
               </div>
               <div class="userInfo">
                 {{ formatBytes(useUserStore().UserInfo['use_disk_size']) }}/

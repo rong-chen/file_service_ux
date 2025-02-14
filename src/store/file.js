@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import {ref, watch, watchEffect} from "vue";
 import SparkMD5 from "spark-md5";
 import {findFile, findFileList, finishFileUpload, uploadChunkFile} from "@/api/file.js";
+import {ElMessage} from "element-plus";
 
 export const useFileStore = defineStore('useFileStore', () => {
     let fileTable = ref([])
@@ -10,14 +11,13 @@ export const useFileStore = defineStore('useFileStore', () => {
     const DEFAULT_SLICK_SIZE = 1024 * 1024;
     let ChunkList = ref([])
     let form = ref({
-        isSort:"否",
-        fileName: "",
+        isSort: "否", fileName: "",
     })
     const getTable = async () => {
         const res = await findFileList(form.value);
         if (res['code'] === 0) {
             tableData.value = [];
-            currentUploadFile.value=[];
+            currentUploadFile.value = [];
             if (res.data.list && res.data.list.length > 0) {
                 for (const item of res.data.list) {
                     if (item['file_state']) {
@@ -49,44 +49,50 @@ export const useFileStore = defineStore('useFileStore', () => {
     }
     getTable()
     const selectFile = async () => {
-        let [fileHandle] = await window.showOpenFilePicker(undefined);
-        const files = await fileHandle.getFile()
-        let baseInfo = ref({
-            name: files.name,
-            size: files.size,
-            overProcess: "",
-            fileMd5: "",
-            msg: "正在生成文件指纹",
-            fileTotalSize: files.size,
-            overSize: 0,
-            type: files.type,
-            status: true
-        })
-        currentUploadFile.value.push(baseInfo.value)
-        //开启线程，后台处理文件md5
-        const worker = new Worker(new URL('../worker/file_worker.js', import.meta.url), {type: 'module'});
-        worker.postMessage({
-            files: files, CHUNK_SIZE: DEFAULT_SLICK_SIZE,
-        })
-        worker.onmessage = async (e) => {
-            baseInfo.value.overProcess = e.data.overProcess + "%";
-            if (e.data.md5) {
-                await filterFile(e.data.md5)
-                baseInfo.value.fileMd5 = e.data.md5;
-                worker.terminate()
-                baseInfo.value.msg = "正在准备上传"
-                baseInfo.value.overProcess = ""
-                const chunks = getFileChunkList(files);
-                if (chunks.length > 0) {
-                    baseInfo.value.msg = "正在生成副本信息"
-                    await uploadFile(baseInfo.value, chunks)
+        try {
+            let [fileHandle] = await window.showOpenFilePicker(undefined);
+            const files = await fileHandle.getFile()
+            let baseInfo = ref({
+                name: files.name,
+                size: files.size,
+                overProcess: "",
+                fileMd5: "",
+                msg: "正在生成文件指纹",
+                fileTotalSize: files.size,
+                overSize: 0,
+                type: files.type,
+                status: true
+            })
+            currentUploadFile.value.push(baseInfo.value)
+            //开启线程，后台处理文件md5
+            const worker = new Worker(new URL('../worker/file_worker.js', import.meta.url), {type: 'module'});
+            worker.postMessage({
+                files: files, CHUNK_SIZE: DEFAULT_SLICK_SIZE,
+            })
+            worker.onmessage = async (e) => {
+                baseInfo.value.overProcess = e.data.overProcess + "%";
+                if (e.data.md5) {
+                    await filterFile(e.data.md5)
+                    baseInfo.value.fileMd5 = e.data.md5;
+                    worker.terminate()
+                    baseInfo.value.msg = "正在准备上传"
+                    baseInfo.value.overProcess = ""
+                    const chunks = getFileChunkList(files);
+                    if (chunks.length > 0) {
+                        baseInfo.value.msg = "正在生成副本信息"
+                        await uploadFile(baseInfo.value, chunks)
+                    }
                 }
             }
+            // 监听 Worker 错误
+            worker.onerror = function (error) {
+                worker.terminate()
+            };
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                ElMessage.error(e.message)
+            }
         }
-        // 监听 Worker 错误
-        worker.onerror = function (error) {
-            worker.terminate()
-        };
     }
     const filterFile = async (md5) => {
         let index = currentUploadFile.value.slice().reverse().findIndex(item => item['fileMd5'] === md5);
@@ -265,6 +271,6 @@ export const useFileStore = defineStore('useFileStore', () => {
 
 
     return {
-        selectFile, currentUploadFile, tableData, getTable,filterRowById,form
+        selectFile, currentUploadFile, tableData, getTable, filterRowById, form
     }
 })

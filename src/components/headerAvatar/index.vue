@@ -34,14 +34,7 @@
     </div>
     <div
         style="display: flex;justify-content: center;align-items: center;box-sizing: border-box;padding-right: 100px">
-      <button style="margin-left: 20px;display: flex;align-items: center" class="uploadBtn"
-              @click="useFileStore().selectFile()">
-        <el-icon>
-          <Promotion/>
-        </el-icon>
-        <span style="margin-left: 5px">文件上传</span>
-      </button>
-      <el-popover popper-class="popoverClass" placement="bottom" :width="600" trigger="click">
+      <el-popover popper-class="popoverClass" placement="left-start" :width="600" trigger="click">
         <template #reference>
           <el-button style="margin-left: 20px" icon="Sort" circle></el-button>
         </template>
@@ -59,6 +52,13 @@
           </div>
         </div>
       </el-popover>
+      <button style="margin-left: 20px;display: flex;align-items: center" class="uploadBtn" @click="useFileStore().selectFile()">
+        <el-icon>
+          <Promotion/>
+        </el-icon>
+        <span style="margin-left: 5px">文件上传</span>
+      </button>
+
 
       <!--      <el-popover-->
       <!--          title=""-->
@@ -196,7 +196,6 @@ export default {
   width: 20%;
   border-right: 1px solid #ededed;
   padding: 8px;
-
 }
 
 .popover-content .left > div {
