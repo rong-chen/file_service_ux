@@ -1,15 +1,37 @@
 <script setup>
 import {ElMessage, ElMessageBox} from "element-plus";
 import {nextTick, onMounted, ref} from "vue";
-import {createGroupApi, getTableData, GetUserGroup, joinGroupUserApi} from "@/api/group.js";
+import {createGroupApi, getGroupFile, getTableData, GetUserGroup, joinGroupUserApi} from "@/api/group.js";
 import {formatISODate, formatTime} from "@/utils/time.js";
 import {useRouterStore} from "@/store/router.js";
 import {useUserStore} from "@/store/user.js";
 import {useFileStore} from "@/store/file.js";
 import {formatBytes} from "@/utils/formatSize.js";
-
+import {Delete, Download} from "@element-plus/icons-vue";
+let tableData =ref([])
 let creatorTableData = ref([])
 let joinTableData = ref([])
+
+
+let changeRow = ref({
+  CreatedAt: "",
+  ID: 0,
+  UpdatedAt: "",
+  chunk_list: [],
+  file_md5: "",
+  file_name: "",
+  file_path: "",
+  file_path_name: "",
+  file_size: 0,
+  file_state: false,
+  file_total: 0,
+  file_type: "",
+  is_share: false,
+  share_account_name: "",
+  share_user_id: 0,
+  user_id: 0,
+  weight: 0,
+})
 onMounted(async () => {
   const {data} = await getTableData()
   creatorTableData.value.push(...data)
@@ -22,6 +44,42 @@ onMounted(async () => {
     })
   })
 })
+
+
+const download = async (row) => {
+  // 生成下载秘钥
+  let file_url = import.meta.env.VITE_BASE_API + row.file_path.replace(".", "")
+  const ele = document.createElement('a');
+  ele.download = row['file_name'];
+  ele.href = file_url;
+  document.body.appendChild(ele);
+  ele.click()
+  document.body.removeChild(ele);
+  // const res = await downloadFileKey(ID)
+  //  if (res['code'] === 0) {
+  //    // await ElMessageBox.alert(`请复制好秘钥，前往下载器下载文件！<br /><a  href="javascript:void(0);">${res.data.key}</a>`, '标题', {
+  //    //   dangerouslyUseHTMLString: true,
+  //    //   confirmButtonText: '网页下载',
+  //    //   callback:()=>{
+  //    //     console.log(res)
+  //    //   }
+  //    // })
+  //    // await downloadFile(res.data.key, (e) => {
+  //    //   console.log(123)
+  //    //   console.log(e)
+  //    // })
+  //    // console.log(res.data.key)
+  //  }
+  // const worker = new Worker(new URL('./worker.js', import.meta.url), {
+  //   type: 'module',
+  // });
+  // worker.onmessage = (e) => {
+  //   console.log(e)
+  // }
+  // worker.postMessage({
+  //   data: "123123"
+  // })
+}
 
 let centerDialogVisible = ref(false)
 let joinDialogFormVisible = ref(false)
@@ -103,8 +161,15 @@ let backgroundImage = ref({
   backgroundImage: 'url("")'
 })
 const myScrollbar = ref(null)
-const openMenu = (e) => {
-  console.log(e)
+
+const openMenu = async (e) => {
+  const id = e.replaceAll('item','')
+  const res = await getGroupFile({
+    group_id: id,
+  })
+  if(res['code'] === 0) {
+    tableData.value = res.data
+  }
 }
 </script>
 
@@ -112,11 +177,11 @@ const openMenu = (e) => {
   <div class="group-container">
     <div class="btn-group">
       <el-button style="margin-left: 20px" type="primary" icon="Plus" @click="createGroup">创建小组</el-button>
-      <el-button style="margin-left: 20px" type="primary" icon="Plus" @click="joinGroup">加入小组</el-button>
+      <el-button style="margin-left: 20px" icon="Pointer" @click="joinGroup">加入小组</el-button>
     </div>
     <div class="content-container">
       <div style="width:200px;height: 100%;">
-        <el-menu unique-opened class="el-menu-vertical-demo" @open="openMenu">
+        <el-menu unique-opened class="el-menu-vertical-demo" @select="openMenu">
           <el-sub-menu index="1">
             <template #title>
               <el-icon>
@@ -125,8 +190,16 @@ const openMenu = (e) => {
               <span>我创建的小组</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item :index="item['group_id'] + 'item'" v-for="item in creatorTableData">
-                {{ item['group_label'] }}
+              <el-menu-item :index="item['ID'] + 'item'" v-for="item in creatorTableData">
+                <el-tooltip
+                    :content="item['label']"
+                    placement="right"
+                    effect="light"
+                >
+                  <div class="ellipsis " style="width: 120px">
+                    {{ item['label'] }}
+                  </div>
+                </el-tooltip>
               </el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
@@ -138,7 +211,17 @@ const openMenu = (e) => {
               <span>我加入的小组</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item :index="item['group_id'] + 'item'" v-for="item in joinTableData">{{ item['group_label'] }}
+              <el-menu-item :index="item['group_id'] + 'item'" v-for="item in joinTableData">
+                <el-tooltip
+                    class="box-item"
+                    :content="item['group_label']"
+                    placement="right"
+                    effect="light"
+                >
+                  <div class="ellipsis" style="width: 120px">
+                    {{ item['group_label'] }}
+                  </div>
+                </el-tooltip>
               </el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
@@ -156,44 +239,62 @@ const openMenu = (e) => {
         <!--        </div>-->
 
       </div>
-      <div style="height: 100%;width: 100%">
+      <div style="height: 100%;width: 100%"  v-if="tableData.length > 0">
         <div class="content-item">
           <div class="share-file">
-            <div style="font-size: 18px;">
+            <div style="font-size: 18px;height: 30px" >
               文件
             </div>
-            <div>
-              123123
-            </div>
-          </div>
-          <div class="share-user">
-            <div style="font-size: 18px;">
-              成员
-            </div>
-            <div>
-              <div style="height: calc(100% - 80px);">
-                <!--                  <el-scrollbar>-->
-                <!--                    <ul class="nav">-->
-                <!--                      <li v-for="item in members" :key="item.id" style="position: relative">-->
-                <!--                        <div style="display: flex;justify-content: space-between;align-items: center;height: 50px">-->
-                <!--                          <div style="display: flex;width: 350px;align-items: center">-->
-                <!--                            <el-icon>-->
-                <!--                              <UserFilled/>-->
-                <!--                            </el-icon>-->
-                <!--                            <div class="file-name ellipsis">{{ item['members_name'] }}</div>-->
-                <!--                          </div>-->
-                <!--                          <div class="file-time">{{ formatISODate(item['members_join_time']) }}</div>-->
-                <!--                        </div>-->
-                <!--                      </li>-->
-                <!--                    </ul>-->
-                <!--                  </el-scrollbar>-->
+              <div style="height: calc(100% - 30px)">
+                <el-scrollbar>
+                  <ul class="nav">
+                    <li v-for="item in tableData" style="position: relative"  @click="changeRow = item['file']">
+                      <div style="display: flex;justify-content: space-between;align-items: center;height: 50px" >
+                        <div style="display: flex;width: 350px;align-items: center">
+                          <img style="width: 25px;height: 25px" src="@/assets/img/fileStyle/unknown_file.png" alt="">
+                          <div class="file-name ellipsis">{{ item['file']['file_name'] }}</div>
+                        </div>
+                        <div class="file-size">{{ formatBytes(item['file']['file_size']) }}</div>
+                        <div class="file-time">{{ formatISODate(item['file']['UpdatedAt']) }}</div>
+                      </div>
+                    </li>
+                  </ul>
+                </el-scrollbar>
               </div>
-            </div>
+          </div>
+            <div class="fileInfo">
+              <el-form :model="changeRow" label-width="auto" style="max-width: 600px" v-if="changeRow.ID">
+                <div style="margin-bottom: 20px;display: flex;align-items: center;justify-content: space-between">
+                  {{ changeRow.file_name }}
+                </div>
+                <el-form-item label="文件指纹">
+                  {{ changeRow.file_md5 }}
+                </el-form-item>
+                <el-form-item label="文件类型">
+                  {{ changeRow.file_type }}
+                </el-form-item>
+                <el-form-item label="文件来源">
+                  {{ changeRow.is_share ? "他人分享" : "上传" }}
+                </el-form-item>
+                <el-form-item label="文件大小">
+                  {{ formatBytes(changeRow.file_size) }}
+                </el-form-item>
+                <el-form-item style="margin-top: 20px">
+                  <div>
+                    <el-button type="primary" @click="download(changeRow)">
+                      <el-icon size="16px">
+                        <Download></Download>
+                      </el-icon>
+                      <span style="margin-left: 5px">下载文件</span>
+                    </el-button>
+                  </div>
+                </el-form-item>
+              </el-form>
           </div>
         </div>
       </div>
     </div>
-    <el-dialog v-model="joinDialogFormVisible" title="Shipping address" width="500">
+    <el-dialog v-model="joinDialogFormVisible" title="加入小组" width="500">
       <el-form :model="joinForm">
         <el-form-item label="房间索引">
           <el-input v-model="joinForm.id"/>
@@ -374,6 +475,11 @@ select:hover {
   padding: 20px 10px 0;
   box-sizing: border-box
 }
+
+.fileInfo {
+  padding: 20px;
+  flex: 1;
+}
 </style>
 <style lang="scss">
 .group-container {
@@ -387,6 +493,7 @@ select:hover {
     border-radius: 5px;
     overflow: hidden;
     height: 40px;
+    box-sizing: border-box !important;
   }
 
   .el-sub-menu__title:hover {
@@ -395,6 +502,7 @@ select:hover {
   }
 
   .el-sub-menu .el-menu-item {
+    width: 170px;
     height: 30px;
     overflow: hidden;
     border-radius: 5px;
@@ -405,20 +513,8 @@ select:hover {
 
   }
 
-  .el-menu-item {
-    width: calc(100% - 30px);
-    padding: 0;
-    display: flex;
-    justify-content: center;
-  }
-
   .el-menu-item.is-active {
     color: #8fb0fd;
-  }
-
-  .el-menu-item-group > ul {
-    display: flex;
-    justify-content: center;
   }
 }
 

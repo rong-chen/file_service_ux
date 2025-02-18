@@ -36,3 +36,24 @@ export const GetUserGroup = (params) => {
         }
     )
 }
+
+export const addGroupFile=(data)=>{
+    return api(
+        {
+            method: "POST",
+            url: "/group-file/add",
+            data
+        }
+    )
+}
+
+
+export const getGroupFile = (params) => {
+    return api(
+        {
+            method: "GET",
+            url: "/group-file/list",
+            params
+        }
+    )
+}

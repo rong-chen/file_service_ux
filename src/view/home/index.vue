@@ -77,7 +77,7 @@
                 </el-icon>
                 <span style="margin-left: 5px" @click="del(changeRow)">删除文件</span>
               </el-button>
-              <el-button type="info">
+              <el-button type="info" @click="shareFile">
                 <el-icon size="16px">
                   <Share></Share>
                 </el-icon>
@@ -88,6 +88,37 @@
         </el-form>
       </div>
     </div>
+
+    <el-dialog
+        v-model="shareFileDialog"
+        title="分享"
+        width="500"
+        destroy-on-close
+        align-center
+        @closed="shareFileDialogCloseHandler"
+    >
+    <span>
+      <el-select
+          v-model="shareFileForm.group_id"
+          placeholder="小组ID"
+      >
+      <el-option
+          v-for="item in groupSelect"
+          :key="item.ID"
+          :label="item.label"
+          :value="item.ID"
+      />
+    </el-select>
+    </span>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="shareFileDialog = false">取消</el-button>
+          <el-button type="primary" @click="submit">
+            提交
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <script setup>
@@ -98,6 +129,7 @@ import {markRaw, ref} from "vue";
 import {Delete, Download} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {collectionFile, deleteFile, downloadFile, downloadFileKey} from "@/api/file.js";
+import {addGroupFile, getTableData} from "@/api/group.js";
 
 let changeRow = ref({
   CreatedAt: "",
@@ -118,8 +150,42 @@ let changeRow = ref({
   user_id: 0,
   weight: 0,
 })
+let shareFileDialog = ref(false)
+let shareFileForm = ref({
+  group_id: null,
+  file_id: null,
+})
+
+
+let groupSelect = ref([])
+const shareFile = async () => {
+  const res = await getTableData()
+  groupSelect.value = res.data
+  if (res['code'] === 0 && res.data && res.data.length > 0) {
+    shareFileForm.value.group_id = res.data[0].ID
+    shareFileForm.value.file_id = changeRow.value['ID']
+  }
+  shareFileDialog.value = true
+}
+
+const shareFileDialogCloseHandler = () => {
+  shareFileForm.value.group_id = null
+  shareFileForm.value.file_id = changeRow.value['ID']
+}
+
+const submit = async () => {
+  const res = await addGroupFile({...shareFileForm.value})
+  if (res['code'] === 0) {
+    shareFileForm.value.group_id = null
+    shareFileForm.value.file_id = changeRow.value['ID']
+    shareFileDialog.value = false
+    ElMessage.success("添加成功")
+  }
+}
+
 let currentFilter = ref(0)
 const fileStore = useFileStore()
+
 const filterFile = async () => {
   currentFilter.value++
   currentFilter.value === 3 && (currentFilter.value = 0);
@@ -135,6 +201,7 @@ const filterFile = async () => {
     changeRow.value = list[0]
   }
 }
+
 const collect = async ({ID, weight}) => {
   let data = {
     id: ID,
