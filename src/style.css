@@ -1,14 +1,19 @@
+@font-face {
+    font-family: 'diyFont';
+    src: url('./assets/font_style/index.ttf');
+}
+
 *, *:before, *:after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
-
+div,ul,li,button{
+    font-family: 'diyFont', serif;
+}
 body {
-    font-family: 'Open Sans', Helvetica, Arial, sans-serif;
     background: #ededed;
 }
-
 li{
     list-style: none;
 }

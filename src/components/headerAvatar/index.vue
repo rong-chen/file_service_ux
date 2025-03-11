@@ -1,6 +1,6 @@
 <template>
   <div class="header headerAvatar-container">
-    <div style="display: flex;font-family: 'Open Sans', Helvetica, Arial, sans-serif;align-items: center">
+    <div style="display: flex;align-items: center">
       <div style="width: 250px;display: flex;align-items: center;padding-left: 20px;">
         <img src="@/assets/icon.png" alt="">
         清淤云盘

@@ -1,8 +1,9 @@
 import {defineStore} from "pinia";
-import {ref, watch, watchEffect} from "vue";
+import {ref, watchEffect} from "vue";
 import SparkMD5 from "spark-md5";
-import {findFile, findFileList, finishFileUpload, uploadChunkFile} from "@/api/file.js";
+import {checkFile, findFile, findFileList, finishFileUpload, uploadChunkFile} from "@/api/file.js";
 import {ElMessage} from "element-plus";
+import {useUserStore} from "@/store/user.js";
 
 export const useFileStore = defineStore('useFileStore', () => {
     let fileTable = ref([])
@@ -10,6 +11,7 @@ export const useFileStore = defineStore('useFileStore', () => {
     let tableData = ref([])
     const DEFAULT_SLICK_SIZE = 1024 * 1024;
     let ChunkList = ref([])
+    const userStore =useUserStore()
     let form = ref({
         isSort: "否", fileName: "",
     })
@@ -128,37 +130,57 @@ export const useFileStore = defineStore('useFileStore', () => {
 
 
     const uploadFile = async (file_info, chunk_list) => {
-        const res = await findFile({
-            "file_total": chunk_list.length,
-            "file_name": file_info.name,
-            "file_type": file_info.type || "unknown",
-            "file_md5": file_info.fileMd5,
-            "file_size": file_info.fileTotalSize,
-            "path": ""
-        })
-        if (res['code'] === 0) {
-            file_info.status = true;
-            file_info.msg = "正在上传中";
-            // 筛选未传递的list集合
-            let chunks;
-            if (res.data.data['chunk_list'] && res.data.data['chunk_list'].length > 0) {
-                chunks = res.data.data['chunk_list'];
-                console.log("res.data.data['chunk_list']")
-                console.log(res.data.data['chunk_list']);
-            } else {
-                chunks = []
-            }
-            const lists = getIncompleteChunks(chunk_list, chunks)
-            console.log(lists)
-            // 转化成format格式参数
-            let requestList = await splitBlob(lists, file_info);
-            // console.log(chunk_list)
-            console.log(requestList)
-            await req_queue(requestList, 5, file_info, chunk_list.length)
-        } else {
-            file_info.status = false;
-            file_info.msg = res['msg'];
+        let list = file_info.name.split(".")
+        let file_suffix = ""
+        if (list.length > 1) {
+            file_suffix = `.${list[list.length - 1]}`
         }
+
+        let obj = {
+            file_name: file_info.name,
+            file_size: file_info.fileTotalSize,
+            file_md5: file_info.fileMd5,
+            file_path: userStore.UserInfo.mount_path,
+            file_suffix,
+            file_chunk_total: chunk_list.length
+        }
+        console.log(obj)
+        const res = await checkFile(obj)
+        console.log(res)
+
+
+
+        // const res = await findFile({
+        //     "file_total": chunk_list.length,
+        //     "file_name": file_info.name,
+        //     "file_type": file_info.type || "unknown",
+        //     "file_md5": file_info.fileMd5,
+        //     "file_size": file_info.fileTotalSize,
+        //     "path": ""
+        // })
+        // if (res['code'] === 0) {
+        //     file_info.status = true;
+        //     file_info.msg = "正在上传中";
+        //     // 筛选未传递的list集合
+        //     let chunks;
+        //     if (res.data.data['chunk_list'] && res.data.data['chunk_list'].length > 0) {
+        //         chunks = res.data.data['chunk_list'];
+        //         console.log("res.data.data['chunk_list']")
+        //         console.log(res.data.data['chunk_list']);
+        //     } else {
+        //         chunks = []
+        //     }
+        //     const lists = getIncompleteChunks(chunk_list, chunks)
+        //     console.log(lists)
+        //     // 转化成format格式参数
+        //     let requestList = await splitBlob(lists, file_info);
+        //     // console.log(chunk_list)
+        //     console.log(requestList)
+        //     await req_queue(requestList, 5, file_info, chunk_list.length)
+        // } else {
+        //     file_info.status = false;
+        //     file_info.msg = res['msg'];
+        // }
     }
 
     const req_queue = async (req_lists, count, base_info, chunkCount) => {

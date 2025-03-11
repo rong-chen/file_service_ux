@@ -128,7 +128,7 @@ import {formatBytes} from "@/utils/formatSize.js";
 import {markRaw, ref} from "vue";
 import {Delete, Download} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {collectionFile, deleteFile, downloadFile, downloadFileKey} from "@/api/file.js";
+import {collectionFile, deleteFile} from "@/api/file.js";
 import {addGroupFile, getTableData} from "@/api/group.js";
 
 let changeRow = ref({
@@ -232,30 +232,6 @@ const download = async (row) => {
   document.body.appendChild(ele);
   ele.click()
   document.body.removeChild(ele);
-  // const res = await downloadFileKey(ID)
-  //  if (res['code'] === 0) {
-  //    // await ElMessageBox.alert(`请复制好秘钥，前往下载器下载文件！<br /><a  href="javascript:void(0);">${res.data.key}</a>`, '标题', {
-  //    //   dangerouslyUseHTMLString: true,
-  //    //   confirmButtonText: '网页下载',
-  //    //   callback:()=>{
-  //    //     console.log(res)
-  //    //   }
-  //    // })
-  //    // await downloadFile(res.data.key, (e) => {
-  //    //   console.log(123)
-  //    //   console.log(e)
-  //    // })
-  //    // console.log(res.data.key)
-  //  }
-  // const worker = new Worker(new URL('./worker.js', import.meta.url), {
-  //   type: 'module',
-  // });
-  // worker.onmessage = (e) => {
-  //   console.log(e)
-  // }
-  // worker.postMessage({
-  //   data: "123123"
-  // })
 }
 
 const del = ({ID}) => {

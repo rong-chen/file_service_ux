@@ -17,7 +17,7 @@ export default {
   <div class="loginInput">
     <div class="border">
       <input type="text" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" placeholder=""/>
-      <div class="placeholder">{{ props.title }}</div>
+      <div class="placeholder" >{{ props.title }}</div>
     </div>
   </div>
 </template>
@@ -63,6 +63,7 @@ export default {
       width: 100%;
       padding: 0 5px;
       background: #fff;
+      cursor: pointer;
     }
 
     &:has(input:not(:placeholder-shown)) > .placeholder {
@@ -92,6 +93,7 @@ export default {
       color: #4a4a4a;
       font-weight: bold;
       font-size: 20px;
+      pointer-events: none;
     }
   }
 }

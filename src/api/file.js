@@ -43,6 +43,8 @@ export const findFile = (data) => {
     )
 }
 
+
+
 export const collectionFile = (data) => {
     return api(
         {
@@ -92,6 +94,17 @@ export  const shareFile = (data) => {
     return api(
         {
             url: `/file/share`,
+            method: 'POST',
+            data
+        }
+    )
+}
+
+// v2 ====
+export const checkFile =(data) => {
+    return api(
+        {
+            url: `/file_v2/check_file`,
             method: 'POST',
             data
         }
