@@ -4,7 +4,7 @@ import HeaderAvatar from "@/components/headerAvatar/index.vue";
 import {useUserStore} from "@/store/user.js";
 import {useRouterStore} from "@/store/router.js";
 import {formatBytes} from "../../utils/formatSize.js";
-import { ref} from "vue";
+import {ref} from "vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -51,7 +51,7 @@ const userStore = useUserStore()
 </script>
 
 <template>
-  <div class="layout-container">
+  <div class="layout-container dark">
     <el-container>
       <el-header>
         <template #default>
@@ -68,10 +68,11 @@ const userStore = useUserStore()
             <img style="width: 50px;height: 50px" src="@/assets/img/fox.png" alt="">
             <div style="flex: 1;margin-left: 10px">
               <div class="userInfo">
-                {{userStore.UserInfo.account_name}}
+                {{ userStore.UserInfo.account_name }}
               </div>
               <div>
-                <el-progress :show-text="false"  :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100"/>
+                <el-progress :show-text="false"
+                             :percentage=" useUserStore().UserInfo['use_disk_size'] / useUserStore().UserInfo['disk_size'] *100"/>
               </div>
               <div class="userInfo">
                 {{ formatBytes(useUserStore().UserInfo['use_disk_size']) }}/

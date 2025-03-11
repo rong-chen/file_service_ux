@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4822109 */
-  src: url('iconfont.woff2?t=1739154236443') format('woff2'),
-       url('iconfont.woff?t=1739154236443') format('woff'),
-       url('iconfont.ttf?t=1739154236443') format('truetype');
+  src: url('iconfont.woff2?t=1741683482753') format('woff2'),
+       url('iconfont.woff?t=1741683482753') format('woff'),
+       url('iconfont.ttf?t=1741683482753') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-quanbuwenjian:before {
+  content: "\e610";
 }
 
 .icon-yidingyue:before {

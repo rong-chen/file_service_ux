@@ -1,57 +1,33 @@
 <template>
-  <div class="login-container">
-    <div class="dowebok">
-      <div class="form sign-in">
-        <h2>欢迎回来</h2>
-        <div class="input-container" style="margin-top: 56px">
-          <input type="text" id="input" v-model="form.account" required="">
-          <label for="input" class="label">用户名</label>
-          <div class="underline"></div>
-        </div>
-
-        <div class="input-container">
-          <input type="password"  id="input" required=""  v-model="form.password">
-          <label for="input" class="label" >密码</label>
-          <div class="underline"></div>
-        </div>
-        <button type="button" style="margin-top: 65px" @click="dbSaveClick" class="submit">登 录</button>
-      </div>
-      <div class="sub-cont">
-        <div class="img">
-          <div class="img__text m--up">
-            <h2>还未注册？</h2>
-            <p>立即注册，体验管理系统！</p>
+  <div class="login-container2">
+    <el-card class="card">
+      <template #default>
+        <div class="select">
+          <div class="select-item">
+            <div :class="{
+            'isActive':active === 1
+          }">密码登录
+            </div>
           </div>
-          <div class="img__text m--in">
-            <h2>已有帐号？</h2>
-            <p>有帐号就登录吧，好久不见了！</p>
-          </div>
-          <div class="img__btn">
+          <div class="select-item">
+            <div :class="{
+            'isActive':active === 2
+          }">账号注册
+            </div>
           </div>
         </div>
-        <div class="form sign-up">
-          <h2>立即注册</h2>
-          <div class="input-container">
-            <input type="text" id="input" v-model="registerForm.account_name" required="">
-            <label for="input" class="label">昵称</label>
-            <div class="underline"></div>
-          </div>
-          <div class="input-container">
-            <input type="text" id="input" v-model="registerForm.account" required="">
-            <label for="input" class="label"   >帐号</label>
-            <div class="underline"></div>
-          </div>
-
-          <div class="input-container">
-            <input type="text" id="input" v-model="registerForm.password" required="">
-            <label for="input" class="label">密码</label>
-            <div class="underline"></div>
-          </div>
-          <button type="button" @click="register" class="submit">注 册</button>
-          <!--          <button type="button" class="fb-btn">使用 <span>facebook</span> 帐号注册</button>-->
+        <div class="tips">
+          <div></div>
+          请填写帐号密码
+          <div></div>
         </div>
-      </div>
-    </div>
+        <LoginInput title="帐号" v-model="form.account" style="margin-top: 20px"></LoginInput>
+        <LoginInput title="密码" v-model="form.password" style="margin-top: 20px"></LoginInput>
+        <div style="margin-top: 20px">
+          <el-button @click="dbSaveClick" style="width: 100%" type="primary">登录</el-button>
+        </div>
+      </template>
+    </el-card>
   </div>
 </template>
 
@@ -62,15 +38,15 @@ import {ElMessage} from "element-plus";
 import {useUserStore} from "@/store/user.js";
 import {RegisterApi} from "@/api/user.js";
 import {useRouterStore} from "@/store/router.js";
+import LoginInput from "@/components/loginInput/index.vue";
 
-const routerStore =useRouterStore()
+const routerStore = useRouterStore()
 onMounted(() => {
   localStorage.removeItem("token")
-  document.querySelector('.img__btn').addEventListener('click', function () {
-    document.querySelector('.dowebok').classList.toggle('s--signup')
-  })
   routerStore.clearRouter()
 })
+
+let active = ref(1)
 const userStore = useUserStore();
 
 let form = ref({
@@ -79,12 +55,12 @@ let form = ref({
 })
 const router = useRouter()
 const dbSaveClick = async () => {
-  if(form.value.account === "" && form.value.account === ""){
+  if (form.value.account === "" && form.value.account === "") {
     ElMessage.error("请填写完整")
     return
   }
   let id = await userStore.LoginStore(form.value.account, form.value.password);
-  if(id === 0){
+  if (id === 0) {
     await userStore.GetUserInfo();
     await routerStore.loadRoutes()
     await router.push({
@@ -92,31 +68,112 @@ const dbSaveClick = async () => {
     })
   }
 }
-let registerForm=ref({
-  account_name:"",
-  password:"",
-  account:""
+let registerForm = ref({
+  account_name: "",
+  password: "",
+  account: ""
 })
-const register = async ()=>{
+const register = async () => {
   const res = await RegisterApi(registerForm.value)
-  if(res['code'] === 0){
+  if (res['code'] === 0) {
     let code = await userStore.LoginStore(registerForm.value.account, registerForm.value.password);
-    if(code ===0 ){
+    if (code === 0) {
       await router.push({
         path: "/layout"
       })
     }
-  }else{
+  } else {
     ElMessage.error(res['msg'])
   }
 }
-const initialization =()=>{
+const initialization = () => {
   registerForm.value = {}
 }
 </script>
 
 
-<style scoped>
+<style scoped lang="scss">
+
+.login-container2 {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  height: 100vh;
+  background-image: url("../../assets/img/login_background.jpeg");
+  background-size: cover;
+
+
+  .tips {
+    color: #505050;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+    font-size: 13px;
+
+    div {
+      height: 1px;
+      background-color: #ffffff;
+      flex: 1;
+      transform: translateY(2px);
+    }
+
+    div:nth-child(2) {
+      margin-left: 10px;
+    }
+
+    div:nth-child(1) {
+      margin-right: 10px;
+    }
+  }
+
+  .select {
+    display: flex;
+    margin-top: 30px;
+
+    .select-item {
+      flex: 1;
+      box-sizing: border-box;
+
+      .isActive {
+        background-color: white;
+        color: black;
+      }
+
+      div {
+        border: 1px solid white;
+        padding: 10px;
+        box-sizing: border-box;
+        border-radius: 5px;
+        color: white;
+      }
+
+      &:nth-child(1) {
+        margin-right: 10px;
+      }
+
+      &:nth-child(2) {
+        margin-left: 10px;
+      }
+    }
+  }
+
+  .card {
+    background: rgba(242, 251, 255, 0.8);
+    height: 100%;
+    width: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .title {
+      font-size: 40px;
+      font-weight: bold;
+    }
+
+  }
+}
 
 .login-container {
   background-image: url("@/assets/bg.jpg");
@@ -404,6 +461,7 @@ input {
   background-color: transparent;
   outline: none;
 }
+
 .input-container .label {
   position: absolute;
   top: 0;
@@ -414,10 +472,9 @@ input {
 }
 
 .input-container input[type="text"]:focus ~ .label,
-.input-container input[type="text"]:valid ~ .label ,
+.input-container input[type="text"]:valid ~ .label,
 .input-container input[type="password"]:focus ~ .label,
-.input-container input[type="password"]:valid ~ .label
-{
+.input-container input[type="password"]:valid ~ .label {
   top: -20px;
   font-size: 16px;
   color: #333;

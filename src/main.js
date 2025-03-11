@@ -7,6 +7,7 @@ import {router} from "@/router/index.js";
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import 'element-plus/theme-chalk/dark/css-vars.css'
 // 引入阿里图标库
 import "@/assets/font/iconfont.css"
 

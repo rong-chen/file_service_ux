@@ -7,8 +7,9 @@ import {useRouterStore} from "@/store/router.js";
 import {useUserStore} from "@/store/user.js";
 import {useFileStore} from "@/store/file.js";
 import {formatBytes} from "@/utils/formatSize.js";
-import {Delete, Download} from "@element-plus/icons-vue";
-let tableData =ref([])
+import {Delete, Download, Share} from "@element-plus/icons-vue";
+
+let tableData = ref([])
 let creatorTableData = ref([])
 let joinTableData = ref([])
 
@@ -163,11 +164,11 @@ let backgroundImage = ref({
 const myScrollbar = ref(null)
 
 const openMenu = async (e) => {
-  const id = e.replaceAll('item','')
+  const id = e.replaceAll('item', '')
   const res = await getGroupFile({
     group_id: id,
   })
-  if(res['code'] === 0) {
+  if (res['code'] === 0) {
     tableData.value = res.data
   }
 }
@@ -180,7 +181,7 @@ const openMenu = async (e) => {
       <el-button style="margin-left: 20px" icon="Pointer" @click="joinGroup">加入小组</el-button>
     </div>
     <div class="content-container">
-      <div style="width:200px;height: 100%;">
+      <div style="width:300px;height: 100%;">
         <el-menu unique-opened class="el-menu-vertical-demo" @select="openMenu">
           <el-sub-menu index="1">
             <template #title>
@@ -196,7 +197,10 @@ const openMenu = async (e) => {
                     placement="right"
                     effect="light"
                 >
-                  <div class="ellipsis " style="width: 120px">
+                  <div class="ellipsis " style="width: 200px">
+                    <el-icon>
+                      <Share/>
+                    </el-icon>
                     {{ item['label'] }}
                   </div>
                 </el-tooltip>
@@ -218,7 +222,10 @@ const openMenu = async (e) => {
                     placement="right"
                     effect="light"
                 >
-                  <div class="ellipsis" style="width: 120px">
+                  <div class="ellipsis" style="width: 200px;position: relative">
+                    <el-icon>
+                      <Share/>
+                    </el-icon>
                     {{ item['group_label'] }}
                   </div>
                 </el-tooltip>
@@ -227,69 +234,58 @@ const openMenu = async (e) => {
           </el-sub-menu>
         </el-menu>
 
-
-        <!--        <div style="height:160px;width: 100%;border-bottom: 1px solid #ededed;">-->
-        <!--          <el-scrollbar ref="myScrollbar" height="150px" style="width: 100%">-->
-        <!--            <div class="group-content">-->
-        <!--              <div class="group-content-item" v-for="(item,index ) in tableData " @click="changeGroup(item)">-->
-        <!--                <div class="cover" :class="{'isActive': item.ID === group.ID}"></div>-->
-        <!--              </div>-->
-        <!--            </div>-->
-        <!--          </el-scrollbar>-->
-        <!--        </div>-->
-
       </div>
-      <div style="height: 100%;width: 100%"  v-if="tableData.length > 0">
+      <div style="height: 100%;width: 100%" v-if="tableData.length > 0">
         <div class="content-item">
           <div class="share-file">
-            <div style="font-size: 18px;height: 30px" >
+            <div style="font-size: 18px;height: 30px">
               文件
             </div>
-              <div style="height: calc(100% - 30px)">
-                <el-scrollbar>
-                  <ul class="nav">
-                    <li v-for="item in tableData" style="position: relative"  @click="changeRow = item['file']">
-                      <div style="display: flex;justify-content: space-between;align-items: center;height: 50px" >
-                        <div style="display: flex;width: 350px;align-items: center">
-                          <img style="width: 25px;height: 25px" src="@/assets/img/fileStyle/unknown_file.png" alt="">
-                          <div class="file-name ellipsis">{{ item['file']['file_name'] }}</div>
-                        </div>
-                        <div class="file-size">{{ formatBytes(item['file']['file_size']) }}</div>
-                        <div class="file-time">{{ formatISODate(item['file']['UpdatedAt']) }}</div>
+            <div style="height: calc(100% - 30px)">
+              <el-scrollbar>
+                <ul class="nav">
+                  <li v-for="item in tableData" style="position: relative" @click="changeRow = item['file']">
+                    <div style="display: flex;justify-content: space-between;align-items: center;height: 50px">
+                      <div style="display: flex;width: 350px;align-items: center">
+                        <img style="width: 25px;height: 25px" src="@/assets/img/fileStyle/unknown_file.png" alt="">
+                        <div class="file-name ellipsis">{{ item['file']['file_name'] }}</div>
                       </div>
-                    </li>
-                  </ul>
-                </el-scrollbar>
-              </div>
+                      <div class="file-size">{{ formatBytes(item['file']['file_size']) }}</div>
+                      <div class="file-time">{{ formatISODate(item['file']['UpdatedAt']) }}</div>
+                    </div>
+                  </li>
+                </ul>
+              </el-scrollbar>
+            </div>
           </div>
-            <div class="fileInfo">
-              <el-form :model="changeRow" label-width="auto" style="max-width: 600px" v-if="changeRow.ID">
-                <div style="margin-bottom: 20px;display: flex;align-items: center;justify-content: space-between">
-                  {{ changeRow.file_name }}
+          <div class="fileInfo">
+            <el-form :model="changeRow" label-width="auto" style="max-width: 600px" v-if="changeRow.ID">
+              <div style="margin-bottom: 20px;display: flex;align-items: center;justify-content: space-between">
+                {{ changeRow.file_name }}
+              </div>
+              <el-form-item label="文件指纹">
+                {{ changeRow.file_md5 }}
+              </el-form-item>
+              <el-form-item label="文件类型">
+                {{ changeRow.file_type }}
+              </el-form-item>
+              <el-form-item label="文件来源">
+                {{ changeRow.is_share ? "他人分享" : "上传" }}
+              </el-form-item>
+              <el-form-item label="文件大小">
+                {{ formatBytes(changeRow.file_size) }}
+              </el-form-item>
+              <el-form-item style="margin-top: 20px">
+                <div>
+                  <el-button type="primary" @click="download(changeRow)">
+                    <el-icon size="16px">
+                      <Download></Download>
+                    </el-icon>
+                    <span style="margin-left: 5px">下载文件</span>
+                  </el-button>
                 </div>
-                <el-form-item label="文件指纹">
-                  {{ changeRow.file_md5 }}
-                </el-form-item>
-                <el-form-item label="文件类型">
-                  {{ changeRow.file_type }}
-                </el-form-item>
-                <el-form-item label="文件来源">
-                  {{ changeRow.is_share ? "他人分享" : "上传" }}
-                </el-form-item>
-                <el-form-item label="文件大小">
-                  {{ formatBytes(changeRow.file_size) }}
-                </el-form-item>
-                <el-form-item style="margin-top: 20px">
-                  <div>
-                    <el-button type="primary" @click="download(changeRow)">
-                      <el-icon size="16px">
-                        <Download></Download>
-                      </el-icon>
-                      <span style="margin-left: 5px">下载文件</span>
-                    </el-button>
-                  </div>
-                </el-form-item>
-              </el-form>
+              </el-form-item>
+            </el-form>
           </div>
         </div>
       </div>
@@ -502,7 +498,6 @@ select:hover {
   }
 
   .el-sub-menu .el-menu-item {
-    width: 170px;
     height: 30px;
     overflow: hidden;
     border-radius: 5px;

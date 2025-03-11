@@ -331,10 +331,7 @@ const del = ({ID}) => {
   padding: 20px;
 }
 
-.isActive {
-  background: #cacaca !important;
-  border-radius: 5px;
-}
+
 
 .filter {
   flex: 1;
