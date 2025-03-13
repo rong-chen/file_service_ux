@@ -29,7 +29,7 @@ export const UserInfoApi = () => {
 export const GetAllUserList = () => {
     return api(
         {
-            url: '/user/list',
+            url: '/user_v2/list',
             method: 'GET'
         }
     )
@@ -38,9 +38,19 @@ export const GetAllUserList = () => {
 export const ConsentUserRegister = (data) => {
     return api(
       {
-          url:"/user/consent",
+          url:"/user_v2/consent",
           method: 'POST',
           data
     }
+    )
+}
+
+export const settingUser = (data) => {
+    return api(
+        {
+            url:"/user_v2/setting_user",
+            method: 'POST',
+            data
+        }
     )
 }

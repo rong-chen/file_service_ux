@@ -16,7 +16,8 @@ export const useUserStore = defineStore("useUserStore", () => {
         ID: 0,
         token: localStorage.getItem("token"),
         authority_id:88,
-        mount_path:""
+        mount_path:"",
+        use_disk_size:0
     })
     const LoginStore = async (account, password) => {
         let res = await LoginApi({

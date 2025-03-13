@@ -3,29 +3,45 @@
     <el-card class="card">
       <template #default>
         <div class="select">
-          <div class="select-item">
+          <div class="select-item" @click="login">
             <div :class="{
             'isActive':active === 1
           }">密码登录
             </div>
           </div>
-          <div class="select-item">
+          <div class="select-item" @click="registerBtn">
             <div :class="{
             'isActive':active === 2
           }">账号注册
             </div>
           </div>
         </div>
-        <div class="tips">
-          <div></div>
-          请填写帐号密码
-          <div></div>
+        <div v-show="active === 1">
+          <div class="tips" >
+            <div></div>
+            请填写帐号密码
+            <div></div>
+          </div>
+          <LoginInput title="帐号" v-model="form.account" style="margin-top: 20px"></LoginInput>
+          <LoginInput title="密码" v-model="form.password" style="margin-top: 20px"></LoginInput>
+          <div style="margin-top: 20px">
+            <el-button @click="dbSaveClick" style="width: 100%" type="primary">登录</el-button>
+          </div>
+
         </div>
-        <LoginInput title="帐号" v-model="form.account" style="margin-top: 20px"></LoginInput>
-        <LoginInput title="密码" v-model="form.password" style="margin-top: 20px"></LoginInput>
-        <div style="margin-top: 20px">
-          <el-button @click="dbSaveClick" style="width: 100%" type="primary">登录</el-button>
-        </div>
+       <div v-show="active === 2">
+         <div class="tips" >
+           <div></div>
+           请填写注册信息
+           <div></div>
+         </div>
+         <LoginInput title="用户名" v-model="registerForm.account_name" style="margin-top: 20px"></LoginInput>
+         <LoginInput title="帐号" v-model="registerForm.account" style="margin-top: 20px"></LoginInput>
+         <LoginInput title="密码" v-model="registerForm.password" style="margin-top: 20px"></LoginInput>
+         <div style="margin-top: 20px">
+           <el-button @click="register" style="width: 100%" type="primary">注册</el-button>
+         </div>
+       </div>
       </template>
     </el-card>
   </div>
@@ -73,6 +89,13 @@ let registerForm = ref({
   password: "",
   account: ""
 })
+const login = () => {
+  active.value = 1
+}
+
+const registerBtn =()=>{
+  active.value = 2
+}
 const register = async () => {
   const res = await RegisterApi(registerForm.value)
   if (res['code'] === 0) {
@@ -83,7 +106,7 @@ const register = async () => {
       })
     }
   } else {
-    ElMessage.error(res['msg'])
+    //ElMessage.error(res['msg'])
   }
 }
 const initialization = () => {
@@ -135,6 +158,7 @@ const initialization = () => {
     .select-item {
       flex: 1;
       box-sizing: border-box;
+      cursor: pointer;
 
       .isActive {
         background-color: white;

@@ -14,7 +14,7 @@
         <el-select
             filterable
             v-model="fileName"
-            placeholder="搜索文件名称"
+            placeholder="搜索文件名称(默认搜索前十条数据)"
             style="width: 240px;font-weight: normal"
             class="selectInput"
             remote
@@ -34,7 +34,7 @@
     </div>
     <div
         style="display: flex;justify-content: center;align-items: center;box-sizing: border-box;padding-right: 100px">
-      <el-popover popper-class="popoverClass" placement="left-start" :width="600" trigger="click">
+      <el-popover popper-class="popoverClass" placement="left-start" :width="600" trigger="click" @show="showPopover">
         <template #reference>
           <el-button style="margin-left: 20px" icon="Sort" circle></el-button>
         </template>
@@ -58,40 +58,10 @@
         </el-icon>
         <span style="margin-left: 5px">文件上传</span>
       </button>
-
-
-      <!--      <el-popover-->
-      <!--          title=""-->
-      <!--          :width="200"-->
-      <!--          trigger="hover"-->
-      <!--          content="this is content, this is content, this is content"-->
-      <!--      >-->
-      <!--        <template #default>-->
-      <!--          <el-form label-width="auto">-->
-      <!--            <div> 昵称：{{ userStore.UserInfo.account_name }}</div>-->
-      <!--            <div> 账号：{{ userStore.UserInfo.account }}</div>-->
-      <!--            <div> 名称：{{ userStore.UserInfo.user_name ? userStore.UserInfo.user_name : "未知" }}</div>-->
-      <!--            <div style="display: flex;align-items: center"> 操作：-->
-      <!--              <el-button link type="primary" @click="gotoLogin">切换用户</el-button>-->
-      <!--            </div>-->
-      <!--          </el-form>-->
-      <!--        </template>-->
-      <!--        <template #reference>-->
-      <!--          <el-image>-->
-      <!--            <template #error>-->
-      <!--              <div style="width: 35px; height: 35px;">-->
-      <!--                <img v-if="!userStore.UserInfo.profile_picture" style="width: 100%; height: 100%"-->
-      <!--                     src="@/assets/img/fox.png" alt=""/>-->
-      <!--              </div>-->
-      <!--            </template>-->
-      <!--          </el-image>-->
-      <!--        </template>-->
-      <!--      </el-popover>-->
     </div>
   </div>
 </template>
 <script setup>
-import {useUserStore} from "@/store/user.js";
 import {onMounted, ref} from "vue";
 import {useRouter} from "vue-router";
 import {Search} from "@element-plus/icons-vue";
@@ -99,23 +69,15 @@ import Downloading from "@/components/downloading/index.vue";
 import Uploading from "@/components/uploading/index.vue";
 import {useFileStore} from "@/store/file.js";
 
-const userStore = useUserStore()
-onMounted(() => {
-})
 const router = useRouter()
-const gotoLogin = () => {
-  router.push({
-    name: "login",
-  })
-}
 const fileStore = useFileStore()
 const fileName = ref("")
 
 let file_list = ref([])
 const inputHandler = async (e) => {
-  fileStore.form.fileName = e
+  fileStore.queryParams.name = e
   file_list.value=[]
-  await fileStore.getTable()
+  await fileStore.getTableData()
   await fileStore.tableData.forEach(row => {
     file_list.value.push({
       ID: row.ID,
@@ -125,8 +87,8 @@ const inputHandler = async (e) => {
 }
 const inputChangeHandler = async ()=>{
   file_list.value=[]
-  fileStore.form.fileName = fileName.value
-  await fileStore.getTable()
+  fileStore.queryParams.name = fileName.value
+  await fileStore.getTableData()
   await fileStore.tableData.forEach(row => {
     file_list.value.push({
       ID: row.ID,
@@ -136,7 +98,7 @@ const inputChangeHandler = async ()=>{
 }
 const goHome =(id)=>{
   router.push({
-    name: "home",
+    name: "my_files",
   })
 }
 

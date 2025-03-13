@@ -85,7 +85,7 @@ export const downloadFileKey = (fileId) => {
 export  const deleteFile = (id) => {
     return api(
         {
-            url: `/file/delete?id=${id}`,
+            url: `/file_v2/delete?id=${id}`,
             method: 'DELETE',
         }
     )
@@ -109,4 +109,37 @@ export const checkFile =(data) => {
             data
         }
     )
+}
+export const upload_file_chunk =(data) => {
+    return api(
+        {
+            url: `/file_v2/upload-chunk`,
+            method: 'POST',
+            data,
+            headers: {
+                "Content-Type": "multipart/form-data",
+            }
+        }
+    )
+}
+
+export const combinedFileApi = (data) => {
+    return api(
+        {
+            url: '/file_v2/combined-file',
+            method: 'POST',
+            data
+        }
+    )
+
+}
+export const fileList = (data) => {
+    return api(
+        {
+            url: '/file_v2/list',
+            method: 'POST',
+            data
+        }
+    )
+
 }

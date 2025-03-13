@@ -11,19 +11,19 @@
             我的文件
           </div>
           <div class="filter">
-            <div style="display: flex;align-items: center">订阅
-              <div class="iconfont icon-shangxiajiantou text" @click="filterFile" :class="{
-               'active-1' : currentFilter ===1,
-               'active-2' : currentFilter ===2,
-              }"></div>
-            </div>
+            <!--            <div style="display: flex;align-items: center">订阅-->
+            <!--              <div class="iconfont icon-shangxiajiantou text" @click="filterFile" :class="{-->
+            <!--               'active-1' : currentFilter ===1,-->
+            <!--               'active-2' : currentFilter ===2,-->
+            <!--              }"></div>-->
+            <!--            </div>-->
           </div>
         </div>
         <div style="height: calc(100% - 50px);">
           <el-scrollbar>
             <ul class="nav">
               <li v-for="item in useFileStore().tableData" style="position: relative">
-                <div v-if="item['file_state']" :class="{'isActive':changeRow['ID'] === item['ID']}"
+                <div :class="{'isActive':changeRow['ID'] === item['ID']}"
                      style="display: flex;justify-content: space-between;align-items: center;height: 50px"
                      @click="changeRow = item">
                   <div style="display: flex;width: 350px;align-items: center">
@@ -33,7 +33,7 @@
                   <div class="file-size">{{ formatBytes(item['file_size']) }}</div>
                   <div class="file-time">{{ formatISODate(item['UpdatedAt']) }}</div>
                 </div>
-                <img src="@/assets/img/dingyue.png" v-if="item['weight'] !==1" class="yidingyue" alt="">
+                <!--                <img src="@/assets/img/dingyue.png" v-if="item['weight'] !==1" class="yidingyue" alt="">-->
               </li>
             </ul>
           </el-scrollbar>
@@ -45,17 +45,17 @@
           <div style="margin-bottom: 20px;display: flex;align-items: center;justify-content: space-between">
             {{ changeRow.file_name }}
             <div class="file-title">
-              <div class="iconfont icon-kongxinwujiaoxing" v-if="changeRow.weight === 1" style="font-size: 25px"
-                   @click="collect(changeRow)"></div>
-              <div class="iconfont icon-shixinwujiaoxing" v-else style="color: #3477fa;font-size: 25px"
-                   @click="collect(changeRow)"></div>
+              <!--              <div class="iconfont icon-kongxinwujiaoxing" v-if="changeRow.weight === 1" style="font-size: 25px"-->
+              <!--                   @click="collect(changeRow)"></div>-->
+              <!--              <div class="iconfont icon-shixinwujiaoxing" v-else style="color: #3477fa;font-size: 25px"-->
+              <!--                   @click="collect(changeRow)"></div>-->
             </div>
           </div>
           <el-form-item label="文件指纹">
             {{ changeRow.file_md5 }}
           </el-form-item>
           <el-form-item label="文件类型">
-            {{ changeRow.file_type }}
+            {{ changeRow.file_suffix }}
           </el-form-item>
           <el-form-item label="文件来源">
             {{ changeRow.is_share ? "他人分享" : "上传" }}
@@ -76,12 +76,6 @@
                   <Delete></Delete>
                 </el-icon>
                 <span style="margin-left: 5px" @click="del(changeRow)">删除文件</span>
-              </el-button>
-              <el-button type="info" @click="shareFile">
-                <el-icon size="16px">
-                  <Share></Share>
-                </el-icon>
-                <span style="margin-left: 5px">分享文件</span>
               </el-button>
             </div>
           </el-form-item>
@@ -125,10 +119,10 @@
 import {useFileStore} from "@/store/file.js";
 import {formatISODate} from "@/utils/time.js";
 import {formatBytes} from "@/utils/formatSize.js";
-import {markRaw, ref} from "vue";
+import {markRaw, onMounted, ref} from "vue";
 import {Delete, Download} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {collectionFile, deleteFile} from "@/api/file.js";
+import {collectionFile, deleteFile, fileList} from "@/api/file.js";
 import {addGroupFile, getTableData} from "@/api/group.js";
 
 let changeRow = ref({
@@ -139,16 +133,9 @@ let changeRow = ref({
   file_md5: "",
   file_name: "",
   file_path: "",
-  file_path_name: "",
   file_size: 0,
-  file_state: false,
-  file_total: 0,
-  file_type: "",
-  is_share: false,
-  share_account_name: "",
-  share_user_id: 0,
-  user_id: 0,
-  weight: 0,
+  file_chunk_total: 0,
+  file_suffix: ""
 })
 let shareFileDialog = ref(false)
 let shareFileForm = ref({
@@ -158,15 +145,6 @@ let shareFileForm = ref({
 
 
 let groupSelect = ref([])
-const shareFile = async () => {
-  const res = await getTableData()
-  groupSelect.value = res.data
-  if (res['code'] === 0 && res.data && res.data.length > 0) {
-    shareFileForm.value.group_id = res.data[0].ID
-    shareFileForm.value.file_id = changeRow.value['ID']
-  }
-  shareFileDialog.value = true
-}
 
 const shareFileDialogCloseHandler = () => {
   shareFileForm.value.group_id = null
@@ -180,46 +158,6 @@ const submit = async () => {
     shareFileForm.value.file_id = changeRow.value['ID']
     shareFileDialog.value = false
     ElMessage.success("添加成功")
-  }
-}
-
-let currentFilter = ref(0)
-const fileStore = useFileStore()
-
-const filterFile = async () => {
-  currentFilter.value++
-  currentFilter.value === 3 && (currentFilter.value = 0);
-  if (currentFilter.value === 1) {
-    fileStore.form.isSort = "是"
-    await fileStore.getTable(fileStore.form)
-  } else {
-    fileStore.form.isSort = "否"
-    await fileStore.getTable(fileStore.form)
-  }
-  let list = fileStore.filterRowById(changeRow.value.ID)
-  if (list.length > 0) {
-    changeRow.value = list[0]
-  }
-}
-
-const collect = async ({ID, weight}) => {
-  let data = {
-    id: ID,
-    weight: 1
-  }
-  if (weight === 1) {
-    data.weight = 2
-  } else {
-    data.weight = 1
-  }
-  const {code} = await collectionFile(data)
-  if (code === 0) {
-    ElMessage.success("变更成功")
-    await useFileStore().getTable()
-    let list = useFileStore().filterRowById(ID)
-    if (list.length > 0) {
-      changeRow.value = list[0]
-    }
   }
 }
 
@@ -247,7 +185,8 @@ const del = ({ID}) => {
   ).then(async () => {
     const {code} = await deleteFile(ID)
     if (code === 0) {
-      await useFileStore().getTable()
+      await getTable()
+      changeRow.value = {}
       ElMessage.success("删除成功")
     }
   }).catch((e) => {
@@ -306,7 +245,6 @@ const del = ({ID}) => {
 .fileInfo {
   padding: 20px;
 }
-
 
 
 .filter {

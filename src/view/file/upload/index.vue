@@ -133,40 +133,42 @@ const uploads2 =async (e)=>{
 
 
 const uploads = async (e) => {
-  files.value = [];
-  loadingInstance1 = ElLoading.service({fullscreen: true})
-  const list = [...e.target.files]
-  let apiCount = list.length;
-  for (const item of list) {
-    const val = item;
-    const {fileMd5} = await getFileMd5(val);
-    const chunks = sliceFile(val);
-    loadingUploadCounts.value = [];
-    await findFile({
-      "file_total": chunks.length,
-      "file_name": val.name,
-      "file_type": item.type || "unknown",
-      "file_md5": fileMd5,
-      "file_size": item.size,
-      "path": ""
-    }).then(res => {
-      const list = getIncompleteChunks(chunks, val.name, fileMd5)
-      files.value.push({
-        blob: list,
-        type: item.type,
-        name: val.name,
-        md5: fileMd5,
-        wait_num: list.length,
-        file_total: chunks.length,
-      })
-      loadingUploadCounts.value[fileMd5] = list.length;
-      apiCount--;
-    })
-    if (apiCount === 0) {
-      loadingInstance1.close();
-      await getTable(form.value)
-    }
-  }
+  await useFileStore().selectFile()
+  //
+  // files.value = [];
+  // loadingInstance1 = ElLoading.service({fullscreen: true})
+  // const list = [...e.target.files]
+  // let apiCount = list.length;
+  // for (const item of list) {
+  //   const val = item;
+  //   const {fileMd5} = await getFileMd5(val);
+  //   const chunks = sliceFile(val);
+  //   loadingUploadCounts.value = [];
+  //   await findFile({
+  //     "file_total": chunks.length,
+  //     "file_name": val.name,
+  //     "file_type": item.type || "unknown",
+  //     "file_md5": fileMd5,
+  //     "file_size": item.size,
+  //     "path": ""
+  //   }).then(res => {
+  //     const list = getIncompleteChunks(chunks, val.name, fileMd5)
+  //     files.value.push({
+  //       blob: list,
+  //       type: item.type,
+  //       name: val.name,
+  //       md5: fileMd5,
+  //       wait_num: list.length,
+  //       file_total: chunks.length,
+  //     })
+  //     loadingUploadCounts.value[fileMd5] = list.length;
+  //     apiCount--;
+  //   })
+  //   if (apiCount === 0) {
+  //     loadingInstance1.close();
+  //     await getTable(form.value)
+  //   }
+  // }
 }
 
 const req_queue = async (list, count) => {

@@ -1,55 +1,72 @@
 import {defineStore} from "pinia";
 import {ref, watchEffect} from "vue";
 import SparkMD5 from "spark-md5";
-import {checkFile, findFile, findFileList, finishFileUpload, uploadChunkFile} from "@/api/file.js";
+import {
+    checkFile,
+    combinedFileApi, fileList,
+    findFile,
+    findFileList,
+    finishFileUpload,
+    upload_file_chunk,
+    uploadChunkFile
+} from "@/api/file.js";
 import {ElMessage} from "element-plus";
 import {useUserStore} from "@/store/user.js";
 
 export const useFileStore = defineStore('useFileStore', () => {
-    let fileTable = ref([])
     let currentUploadFile = ref([])
     let tableData = ref([])
     const DEFAULT_SLICK_SIZE = 1024 * 1024;
-    let ChunkList = ref([])
-    const userStore =useUserStore()
+    const userStore = useUserStore()
     let form = ref({
         isSort: "否", fileName: "",
     })
-    const getTable = async () => {
-        const res = await findFileList(form.value);
-        if (res['code'] === 0) {
-            tableData.value = [];
-            currentUploadFile.value = [];
-            if (res.data.list && res.data.list.length > 0) {
-                for (const item of res.data.list) {
-                    if (item['file_state']) {
-                        tableData.value.push(item)
-                    }
-                    if (!item['file_state'] && (item['chunk_list'].length !== item['file_total'])) {
-                        let baseInfo = ref({
-                            name: item.file_name,
-                            size: item.file_size,
-                            overProcess: Math.ceil((item['chunk_list'].length ?? 0) / item['file_total'] * 100) + "%",
-                            fileMd5: item['file_md5'],
-                            msg: "暂停上传",
-                            fileTotalSize: item.file_size,
-                            overSize: (item['chunk_list'].length ?? 0) * DEFAULT_SLICK_SIZE,
-                            type: item.file_type,
-                            status: false
-                        })
-                        currentUploadFile.value.push(baseInfo.value)
-                    }
-                    if (!item['file_state'] && item['chunk_list'].length === item['file_total']) {
-                        await finishFileUpload({
-                            fileMd5: item['file_md5'], fileName: item.file_name,
-                        });
-                        await getTable();
-                    }
-                }
-            }
+    let queryParams = ref({
+        pageSize: 10,
+        page: 1,
+        isOver: true,
+        name: ""
+    })
+    const getTableData = async () => {
+        const {data, code} = await fileList(queryParams.value)
+        if (code === 0) {
+            tableData.value = data
         }
     }
-    getTable()
+    // const getTable = async () => {
+    //      const res = await findFileList(form.value);
+    //     if (res['code'] === 0) {
+    //         tableData.value = [];
+    //         currentUploadFile.value = [];
+    //         if (res.data.list && res.data.list.length > 0) {
+    //             for (const item of res.data.list) {
+    //                 if (item['file_state']) {
+    //                     tableData.value.push(item)
+    //                 }
+    //                 if (!item['file_state'] && (item['chunk_list'].length !== item['file_total'])) {
+    //                     let baseInfo = ref({
+    //                         name: item.file_name,
+    //                         size: item.file_size,
+    //                         overProcess: Math.ceil((item['chunk_list'].length ?? 0) / item['file_total'] * 100) + "%",
+    //                         fileMd5: item['file_md5'],
+    //                         msg: "暂停上传",
+    //                         fileTotalSize: item.file_size,
+    //                         overSize: (item['chunk_list'].length ?? 0) * DEFAULT_SLICK_SIZE,
+    //                         type: item.file_type,
+    //                         status: false
+    //                     })
+    //                     currentUploadFile.value.push(baseInfo.value)
+    //                 }
+    //                 if (!item['file_state'] && item['chunk_list'].length === item['file_total']) {
+    //                     await finishFileUpload({
+    //                         fileMd5: item['file_md5'], fileName: item.file_name,
+    //                     });
+    //                     await getTable();
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     const selectFile = async () => {
         try {
             let [fileHandle] = await window.showOpenFilePicker(undefined);
@@ -80,6 +97,7 @@ export const useFileStore = defineStore('useFileStore', () => {
                     baseInfo.value.msg = "正在准备上传"
                     baseInfo.value.overProcess = ""
                     const chunks = getFileChunkList(files);
+                    console.log(chunks);
                     if (chunks.length > 0) {
                         baseInfo.value.msg = "正在生成副本信息"
                         await uploadFile(baseInfo.value, chunks)
@@ -109,12 +127,11 @@ export const useFileStore = defineStore('useFileStore', () => {
         let chunkList = [];
         let start = 0;
         let end = DEFAULT_SLICK_SIZE;
-
         function loadNextFileChunk() {
             try {
-                const chunk = file.slice(start, end + start);
-                chunkList.push(chunk);
                 if (start < file.size) {
+                    const chunk = file.slice(start, end + start);
+                    chunkList.push(chunk);
                     start = start + DEFAULT_SLICK_SIZE;
                     start > file.size && (end = file.size);
                     loadNextFileChunk();
@@ -142,45 +159,27 @@ export const useFileStore = defineStore('useFileStore', () => {
             file_md5: file_info.fileMd5,
             file_path: userStore.UserInfo.mount_path,
             file_suffix,
-            file_chunk_total: chunk_list.length
+            file_chunk_total: chunk_list.length,
         }
-        console.log(obj)
+
         const res = await checkFile(obj)
-        console.log(res)
-
-
-
-        // const res = await findFile({
-        //     "file_total": chunk_list.length,
-        //     "file_name": file_info.name,
-        //     "file_type": file_info.type || "unknown",
-        //     "file_md5": file_info.fileMd5,
-        //     "file_size": file_info.fileTotalSize,
-        //     "path": ""
-        // })
-        // if (res['code'] === 0) {
-        //     file_info.status = true;
-        //     file_info.msg = "正在上传中";
-        //     // 筛选未传递的list集合
-        //     let chunks;
-        //     if (res.data.data['chunk_list'] && res.data.data['chunk_list'].length > 0) {
-        //         chunks = res.data.data['chunk_list'];
-        //         console.log("res.data.data['chunk_list']")
-        //         console.log(res.data.data['chunk_list']);
-        //     } else {
-        //         chunks = []
-        //     }
-        //     const lists = getIncompleteChunks(chunk_list, chunks)
-        //     console.log(lists)
-        //     // 转化成format格式参数
-        //     let requestList = await splitBlob(lists, file_info);
-        //     // console.log(chunk_list)
-        //     console.log(requestList)
-        //     await req_queue(requestList, 5, file_info, chunk_list.length)
-        // } else {
-        //     file_info.status = false;
-        //     file_info.msg = res['msg'];
-        // }
+        if (res['code'] === 0) {
+            userStore.UserInfo.use_disk_size += file_info.fileTotalSize
+            file_info.status = true;
+            file_info.msg = "正在上传中";
+            file_info['id'] = res.data.ID
+            file_info['chunk_path'] = res.data['chunk_path']
+            // 筛选未传递的list集合
+            let chunks;
+            if (res.data['chunk_list'] && res.data['chunk_list'].length > 0) {
+                chunks = res.data['chunk_list'];
+            } else {
+                chunks = []
+            }
+            const lists = getIncompleteChunks(chunk_list, chunks)
+            let requestList = await splitBlob(lists, file_info)
+            await req_queue(requestList, 5, file_info, chunk_list.length)
+        }
     }
 
     const req_queue = async (req_lists, count, base_info, chunkCount) => {
@@ -193,22 +192,21 @@ export const useFileStore = defineStore('useFileStore', () => {
             const sendApi = async () => {
                 const req_list = req_lists.slice(index, count + index);
                 const promises = req_list.map(async (request) => {
-                    const res = await uploadChunkFile(request)
+                    const res = await upload_file_chunk(request)
                     if (res['code'] === 0) {
                         total--;
                         uploadSuccessTotal++;
-                        console.log(chunkCount - req_lists.length)
                         base_info['overProcess'] = Math.ceil((uploadSuccessTotal + (chunkCount - req_lists.length)) / chunkCount * 100) + "%";
                         base_info['overSize'] = (uploadSuccessTotal + (chunkCount - req_lists.length)) / chunkCount * base_info['size']
-                        if (base_info['overSize'] > base_info['size']) {
-                            base_info['overSize'] = base_info['size']
-                        }
-                        if (total === 0) {
-                            base_info.msg = "上传成功";
-                            await finishFileUpload({
-                                fileMd5: base_info.fileMd5, fileName: base_info.name,
-                            });
-                            getTable()
+                        if (base_info['overSize'] >= base_info['size']) {
+                            currentUploadFile.value = currentUploadFile.value.filter(item=>{
+                                return item['id'] !== base_info['id']
+                            })
+                            // 上传完毕，执行合并方法
+                            await combinedFileApi({
+                                id: base_info['id']
+                            })
+                            await getTableData()
                         }
                     }
                 }); // 发送所有请求
@@ -222,11 +220,8 @@ export const useFileStore = defineStore('useFileStore', () => {
         })
     }
 
-    watchEffect(() => {
-        console.log(ChunkList.value)
-    })
 
-
+    // 过滤已上传的片段，通过index字段过滤
     const getIncompleteChunks = (list, olist) => {
         let itemList = []
         if (olist && olist.length > 0) {
@@ -236,7 +231,7 @@ export const useFileStore = defineStore('useFileStore', () => {
         if (itemList?.length > 0) {
             // 存储已经上传的片段number
             idlist = itemList.map((item) => {
-                return item['chunk_number']
+                return Number(item['index'])
             });
         }
         let list2 = []
@@ -247,6 +242,7 @@ export const useFileStore = defineStore('useFileStore', () => {
                 })
             }
         })
+
         return list2;
     }
 
@@ -266,12 +262,11 @@ export const useFileStore = defineStore('useFileStore', () => {
                     spark.append(blob);
                     let md5 = spark.end();
                     formData.append("file", item1['file']);
-                    formData.append("fileMd5", file_info['fileMd5']);
-                    formData.append("chunkMd5", md5);
-                    formData.append("fileName", file_info['name']);
-                    formData.append("fileType", file_info['type']);
-                    formData.append("chunkNumber", item1['index']);
-                    formData.append("chunkTotal", "0");
+                    formData.append("file_md5", file_info['fileMd5']);
+                    formData.append("chunk_path", file_info['chunk_path']);
+                    formData.append("chunk_md5", md5);
+                    formData.append("index", item1['index']);
+                    formData.append("file_id", file_info['id']);
                     requestList.push(formData);
                     resolve(); // 当onload完成时，resolve当前Promise
                 };
@@ -290,9 +285,32 @@ export const useFileStore = defineStore('useFileStore', () => {
         }
         return [];
     }
-
-
+    const getUploadFileList = async () => {
+        const {data, code} = await fileList({
+            pageSize: 9999999,
+            page: 1,
+            isOver: false,
+            name: ""
+        })
+        if (code === 0) {
+            data && data.length && data.forEach(item => {
+                currentUploadFile.value.push({
+                    name:item['file_name'],
+                    size:item['file_size'],
+                    overProcess: Math.ceil((item['chunk_list']?.length ?? 0) / item['file_chunk_total'] * 100) + "%",
+                    fileMd5: item['file_md5'],
+                    msg:"暂停上传",
+                    fileTotalSize:item['file_size'],
+                    overSize:(item['chunk_list']?.length ?? 0) * DEFAULT_SLICK_SIZE,
+                    type:item['file_type'],
+                    status:false
+                });
+            })
+        }
+    }
+    getUploadFileList()
+    getTableData()
     return {
-        selectFile, currentUploadFile, tableData, getTable, filterRowById, form
+        selectFile, currentUploadFile, tableData, filterRowById, form,getUploadFileList,queryParams,getTableData
     }
 })
