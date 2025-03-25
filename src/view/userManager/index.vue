@@ -1,6 +1,6 @@
 <template>
   <div class="user-manager-container">
-    <el-table :data="tableData" style="width: 100%">
+    <el-table stripe  :data="tableData" style="width: 100%">
       <el-table-column show-overflow-tooltip prop="ID" label="ID" width="80"/>
       <el-table-column show-overflow-tooltip prop="account_name" label="账号名称" width="180"/>
       <el-table-column show-overflow-tooltip prop="user_name" label="用户姓名"/>
@@ -9,6 +9,7 @@
       <el-table-column show-overflow-tooltip prop="uuid" label="帐号uid"/>
       <el-table-column show-overflow-tooltip label="账号状态">
         <template #default="{row}">
+
           <el-icon color="green" size="20" v-if='row["isExamine"]'>
             <CircleCheck/>
           </el-icon>

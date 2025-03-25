@@ -163,7 +163,7 @@ const submit = async () => {
 
 const download = async (row) => {
   // 生成下载秘钥
-  let file_url = import.meta.env.VITE_BASE_API + row.file_path.replace(".", "")
+  let file_url = import.meta.env.VITE_BASE_API + row.file_path.replace(".", "").replace(/\\/g, '/');
   const ele = document.createElement('a');
   ele.download = row['file_name'];
   ele.href = file_url;

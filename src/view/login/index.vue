@@ -38,6 +38,9 @@
          <LoginInput title="用户名" v-model="registerForm.account_name" style="margin-top: 20px"></LoginInput>
          <LoginInput title="帐号" v-model="registerForm.account" style="margin-top: 20px"></LoginInput>
          <LoginInput title="密码" v-model="registerForm.password" style="margin-top: 20px"></LoginInput>
+         <el-input v-model="qrcode">123</el-input>
+         <canvas id="captchaCanvas" width="100" height="40" @click="generateCaptcha" style="margin-left: 10px; cursor: pointer;"></canvas>
+
          <div style="margin-top: 20px">
            <el-button @click="register" style="width: 100%" type="primary">注册</el-button>
          </div>
@@ -60,8 +63,24 @@ const routerStore = useRouterStore()
 onMounted(() => {
   localStorage.removeItem("token")
   routerStore.clearRouter()
+  generateCaptcha()
 })
+let captchaText = ref("");
+const generateCaptcha = () => {
+  const canvas = document.getElementById("captchaCanvas");
+  const ctx = canvas.getContext("2d");
+  captchaText.value = Math.random().toString(36).substring(2, 6); // 生成 4 位随机字母/数字
 
+  ctx.fillStyle = "#f2f2f2";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.font = "25px Arial";
+  ctx.fillStyle = "#333";
+  ctx.fillText(captchaText.value, 20, 30);
+};
+
+let qrcode =ref("")
+const inputCaptcha = ref("");
 let active = ref(1)
 const userStore = useUserStore();
 
